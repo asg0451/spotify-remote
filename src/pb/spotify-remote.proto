@@ -1,0 +1,15 @@
+syntax = "proto3";
+package protocol;
+
+option go_package = "coldcutz.net/spotify-remote/src/pb";
+
+service SpotifyRemote {
+    rpc SendAudio(stream AudioChunk) returns (SendAudioResponse) {}
+}
+
+message AudioChunk {
+    string id = 1;
+    bytes data = 2;
+}
+
+message SendAudioResponse {}
