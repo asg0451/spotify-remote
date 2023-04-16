@@ -366,6 +366,8 @@ linters-settings:
       - rangeExprCopy
       - rangeValCopy
 
+      - commentedOutCode
+
   errcheck:
     # Report `a := b.(MyStruct)` when `a, ok := ...` should be.
     check-type-assertions: true # Default: false
