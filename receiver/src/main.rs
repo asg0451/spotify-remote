@@ -37,7 +37,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(kys, play_spotify)]
+#[commands(kys, play_spotify, stop)]
 struct General;
 
 #[derive(Debug, Parser)]
