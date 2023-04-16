@@ -3,9 +3,9 @@ use clap::Parser;
 
 #[derive(Debug, Parser)]
 struct Options {
-    #[clap(short, long, default_value = "http://localhost:8080")]
+    #[clap(short, long, default_value = "https://sproter.beagle-chickadee.ts.net")]
     receiver_addr: String,
-    #[clap(short, long, default_value = "test")]
+    #[clap(short, long, default_value = "danube")]
     device_name: String,
 }
 
