@@ -42,7 +42,7 @@ struct General;
 
 #[derive(Debug, Parser)]
 struct Options {
-    #[clap(short, long)]
+    #[clap(short, long, default_value = "8080")]
     grpc_port: u16,
 }
 
@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
         let registry = Arc::clone(&stream_registry);
         tokio::spawn(async move {
             let srv = receiver::server::Server::new(registry);
-            let addr = format!(":{}", opts.grpc_port).parse().unwrap();
+            let addr = format!("0.0.0.0:{}", opts.grpc_port).parse().unwrap();
             tracing::info!(?addr, "starting grpc server");
             let svc = receiver::pb::spotify_remote_server::SpotifyRemoteServer::new(srv);
             tonic::transport::Server::builder()
@@ -217,6 +217,12 @@ async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult
         let data = ctx.data.read().await;
         let mut stream_registry = data.get::<StreamRegistry>().unwrap().write().unwrap();
         rx = stream_registry.take(&id);
+    }
+
+    if rx.is_none() {
+        tracing::info!(?id, "no stream found");
+        msg.reply(ctx, "no stream found").await?;
+        return Ok(());
     }
 
     let _jh = tokio::task::spawn(async move {
