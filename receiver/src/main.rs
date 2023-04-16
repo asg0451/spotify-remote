@@ -1,5 +1,5 @@
 use std::{
-    io::{BufWriter, Write},
+    io::Write,
     process::{Command, Stdio},
     sync::{Arc, RwLock},
 };
@@ -18,7 +18,7 @@ use serenity::{
         StandardFramework,
     },
     model::{channel::Message, gateway::Ready},
-    prelude::GatewayIntents,
+    prelude::{GatewayIntents, TypeMapKey},
     Result as SerenityResult,
 };
 use songbird::{
@@ -26,7 +26,7 @@ use songbird::{
     SerenityInit,
 };
 
-use receiver::stream_registry::StreamRegistry;
+use receiver::creds_registry::CredsRegistry;
 
 struct Handler;
 #[async_trait]
@@ -44,6 +44,12 @@ struct General;
 struct Options {
     #[clap(short, long, default_value = "8080")]
     grpc_port: u16,
+    #[clap(short, long, default_value = "/utils/player")]
+    player_path: String,
+}
+
+impl TypeMapKey for Options {
+    type Value = Arc<RwLock<Options>>;
 }
 
 #[tokio::main]
@@ -53,7 +59,7 @@ async fn main() -> Result<()> {
 
     let opts = Options::parse();
 
-    let stream_registry = Arc::new(RwLock::new(StreamRegistry::default()));
+    let stream_registry = Arc::new(RwLock::new(CredsRegistry::default()));
 
     // start grpc server
     let grpc_server_jh = {
@@ -105,7 +111,8 @@ async fn main() -> Result<()> {
 
     {
         let mut data = client.data.write().await;
-        data.insert::<StreamRegistry>(Arc::clone(&stream_registry));
+        data.insert::<CredsRegistry>(Arc::clone(&stream_registry));
+        data.insert::<Options>(Arc::new(RwLock::new(opts)));
     }
 
     let disc_jh = tokio::spawn(async move { client.start().await });
@@ -157,7 +164,7 @@ async fn kys(_: &Context, _: &Message, _: Args) -> CommandResult {
 #[command]
 #[only_in(guilds)]
 #[aliases(ps)]
-async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+async fn play_spotify(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     // queue up a new input or something
     let guild = msg.guild(&ctx.cache).unwrap();
     let voice_manager = songbird::get(ctx).await.unwrap().clone();
@@ -178,8 +185,39 @@ async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     let (call_handler_lock, res) = voice_manager.join(guild.id, connect_to).await;
     res?;
 
-    // gst-launch-1.0 filesrc location=/dev/stdin ! rawaudioparse use-sink-caps=false format=pcm pcm-format=s16le sample-rate=44100 num-channels=2 ! audioconvert ! audioresample ! audio/x-raw, rate=48000 ! filesink location=/dev/stdout
-    let mut gstreamer_command = Command::new("gst-launch-1.0")
+    // get the creds
+    let name = msg.author.name.clone();
+    let creds_req = {
+        let data = ctx.data.read().await;
+        let mut registry = data.get::<CredsRegistry>().unwrap().write().unwrap();
+        tracing::debug!(?registry);
+        registry.take(&name)
+    };
+
+    if creds_req.is_none() {
+        tracing::info!(?name, "no creds found");
+        msg.reply(ctx, "no stream found").await?;
+        return Ok(());
+    }
+    let creds_req = creds_req.unwrap();
+    let creds_json = creds_req.creds_json;
+
+    let player_path = {
+        let data = ctx.data.read().await;
+        let opts = data.get::<Options>().unwrap().read().unwrap();
+        opts.player_path.clone()
+    };
+    tracing::debug!(?player_path, "starting player");
+    let mut player_command = Command::new(player_path)
+        .stderr(Stdio::inherit())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()?;
+    let mut player_stdin = player_command.stdin.take().unwrap();
+    player_stdin.write_all(creds_json.as_bytes())?;
+
+    // spotify streams at 44.1khz, we want 48khz, so use gstreamer to resample it.
+    let gstreamer_command = Command::new("gst-launch-1.0")
         .args([
             "filesrc",
             "location=/dev/stdin",
@@ -202,46 +240,20 @@ async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult
             "location=/dev/stdout",
         ])
         .stderr(Stdio::inherit())
-        .stdin(Stdio::piped())
+        .stdin(player_command.stdout.take().unwrap())
         .stdout(Stdio::piped())
         .spawn()?;
 
-    let stdin = gstreamer_command.stdin.take().unwrap();
-    let mut stdin = BufWriter::new(stdin);
+    tracing::debug!(?name, "started player processes");
 
-    // get the stream
-    let id = args.message().to_string();
-    let rx;
-    {
-        let data = ctx.data.read().await;
-        let mut stream_registry = data.get::<StreamRegistry>().unwrap().write().unwrap();
-        rx = stream_registry.take(&id);
-    }
-
-    if rx.is_none() {
-        tracing::info!(?id, "no stream found");
-        msg.reply(ctx, "no stream found").await?;
-        return Ok(());
-    }
-
-    let _jh = tokio::task::spawn(async move {
-        tracing::info!(?id, "piping");
-        let mut rx = rx.unwrap();
-        while let Some(bytes) = rx.recv().await {
-            stdin.write_all(&bytes)?; // TODO: this blocks
-        }
-        tracing::info!(?id, "finished piping");
-        Ok::<_, anyhow::Error>(())
-    });
-
-    // jh.await??;
-
-    let reader = children_to_reader::<i16>(vec![gstreamer_command]);
+    let reader = children_to_reader::<i16>(vec![player_command, gstreamer_command]);
 
     let input = Input::new(true, reader, Codec::Pcm, Container::Raw, None);
 
     let mut call_handler = call_handler_lock.lock().await;
     call_handler.enqueue_source(input);
+
+    tracing::debug!(?name, "enqueued source");
 
     Ok(())
 }

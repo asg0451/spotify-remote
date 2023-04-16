@@ -4,12 +4,14 @@ package protocol;
 option go_package = "coldcutz.net/spotify-remote/src/pb";
 
 service SpotifyRemote {
-    rpc SendAudio(stream AudioChunk) returns (SendAudioResponse) {}
+    rpc ForwardCreds(ForwardCredsRequest) returns (ForwardCredsResponse) {}
 }
 
-message AudioChunk {
-    string id = 1;
-    bytes data = 2;
+message ForwardCredsRequest {
+    string username = 1;
+    string device_name = 2;
+    // TODO: this is a bit silly..
+    string creds_json = 3;
 }
 
-message SendAudioResponse {}
+message ForwardCredsResponse {}

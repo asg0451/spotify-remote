@@ -1,5 +1,5 @@
 [package]
-name = "receiver"
+name = "forwarder"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,8 +12,9 @@ clap = { version = "4.2.2", features = ["derive"] }
 futures = "0.3.28"
 futures-util = "0.3.28"
 hex = "0.4.3"
-librespot = { version = "0.4.2", default-features = false }
+librespot = { version = "0.4.2", default_features = false }
 prost = "0.11.9"
+serde_json = "1.0.96"
 sha1 = "0.10.5"
 tokio = { version = "1.27.0", features = ["full"] }
 tonic = { version = "0.9.1", features = ["tls-roots"] }
@@ -25,11 +26,6 @@ tracing-subscriber = { version = "0.3.16", features = [
 ] }
 url = "2.3.1"
 zerocopy = "0.6.1"
-serenity = { version = "0.11", features = ["voice"] }
-songbird = { version = "0.3", features = ["builtin-queue"] }
-futures-core = "0.3.28"
-tokio-stream = "0.1.12"
-serde_json = "1.0.96"
 
 [build-dependencies]
 tonic-build = "0.9.1"
