@@ -1,5 +1,4 @@
 use std::{
-    io::Write,
     process::{Command, Stdio},
     sync::{Arc, RwLock},
 };
@@ -61,18 +60,12 @@ async fn main() -> Result<()> {
 
     let stream_registry = Arc::new(RwLock::new(CredsRegistry::default()));
 
-    // start grpc server
-    let grpc_server_jh = {
+    // start rpc server
+    let rpc_server_jh = {
         let registry = Arc::clone(&stream_registry);
         tokio::spawn(async move {
             let srv = receiver::server::Server::new(registry);
-            let addr = format!("0.0.0.0:{}", opts.grpc_port).parse().unwrap();
-            tracing::info!(?addr, "starting grpc server");
-            let svc = receiver::pb::spotify_remote_server::SpotifyRemoteServer::new(srv);
-            tonic::transport::Server::builder()
-                .add_service(svc)
-                .serve(addr)
-                .await?;
+            srv.run(opts.grpc_port).await?;
             Ok::<(), anyhow::Error>(())
         })
     };
@@ -118,7 +111,7 @@ async fn main() -> Result<()> {
     let disc_jh = tokio::spawn(async move { client.start().await });
 
     tokio::select! {
-        _ = grpc_server_jh => {
+        _ = rpc_server_jh => {
             tracing::info!("grpc server exited");
         }
         _ = disc_jh => {
@@ -200,7 +193,6 @@ async fn play_spotify(ctx: &Context, msg: &Message, _args: Args) -> CommandResul
         return Ok(());
     }
     let creds_req = creds_req.unwrap();
-    let creds_json = creds_req.creds_json;
 
     let player_path = {
         let data = ctx.data.read().await;
@@ -214,7 +206,7 @@ async fn play_spotify(ctx: &Context, msg: &Message, _args: Args) -> CommandResul
         .stdout(Stdio::piped())
         .spawn()?;
     let mut player_stdin = player_command.stdin.take().unwrap();
-    player_stdin.write_all(creds_json.as_bytes())?;
+    serde_json::to_writer(&mut player_stdin, &creds_req.creds)?;
 
     // spotify streams at 44.1khz, we want 48khz, so use gstreamer to resample it.
     let gstreamer_command = Command::new("gst-launch-1.0")

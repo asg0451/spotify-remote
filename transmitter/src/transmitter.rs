@@ -1,27 +1,25 @@
-
-
 use anyhow::Result;
 use futures_util::StreamExt;
-use librespot::{
-    discovery::Credentials,
-};
+use librespot::discovery::Credentials;
 use sha1::{Digest, Sha1};
-use tonic::transport::Channel;
-
-use crate::pb::spotify_remote_client::SpotifyRemoteClient;
 
 #[derive(Debug)]
 pub struct Transmitter {
-    grpc_client: SpotifyRemoteClient<Channel>,
+    receiver_addr: String,
+    http_client: reqwest::Client,
     device_name: String,
 }
 
 impl Transmitter {
     pub async fn new(receiver_addr: String, device_name: String) -> Result<Self> {
-        let grpc_client = SpotifyRemoteClient::connect(receiver_addr).await?;
+        let http_client = reqwest::ClientBuilder::new()
+            .connect_timeout(std::time::Duration::from_secs(5))
+            .timeout(std::time::Duration::from_secs(5))
+            .build()?;
         Ok(Self {
-            grpc_client,
+            http_client,
             device_name,
+            receiver_addr,
         })
     }
 
@@ -64,14 +62,13 @@ impl Transmitter {
     }
 
     async fn forward_creds(&mut self, device_name: String, creds: Credentials) -> Result<()> {
-        let _resp = self
-            .grpc_client
-            .forward_creds(crate::pb::ForwardCredsRequest {
-                device_name,
-                username: creds.username.clone(),
-                creds_json: serde_json::to_string(&creds)?,
-            })
+        let resp = self
+            .http_client
+            .post(self.receiver_addr.clone() + "/api/forward_creds")
+            .json(&protocol::ForwardCreds { device_name, creds })
+            .send()
             .await?;
+        tracing::debug!(?resp, "forward creds response");
         Ok(())
     }
 }
