@@ -50,6 +50,7 @@ pub fn load_env(path: &str) -> Result<()> {
     Ok(())
 }
 
+#[cfg(unix)]
 pub async fn ctrl_c() {
     use tokio::signal::unix::{signal, SignalKind};
     let mut int = signal(SignalKind::interrupt()).unwrap();
