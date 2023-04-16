@@ -49,8 +49,7 @@ struct Options {
 #[tokio::main]
 async fn main() -> Result<()> {
     receiver::util::setup_logging()?;
-    receiver::util::load_env(".env")?;
-    tracing::info!("PATH: {:?}", std::env::var("PATH"));
+    let _ = receiver::util::load_env(".env");
 
     let opts = Options::parse();
 
