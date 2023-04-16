@@ -44,7 +44,7 @@ struct General;
 struct Options {
     #[clap(short, long, default_value = "8080")]
     grpc_port: u16,
-    #[clap(short, long, default_value = "/utils/player")]
+    #[clap(short, long, default_value = "player")]
     player_path: String,
 }
 

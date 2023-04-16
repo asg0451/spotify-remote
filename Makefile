@@ -4,9 +4,9 @@ srcs = $(shell find . -name '*.rs' -or -name 'Cargo.toml' -or -name 'Cargo.lock'
 
 .PHONY: docker docker-push docker-run windows-remote
 
-windows-remote: target/x86_64-pc-windows-gnu/release/spotify-remote.exe
-target/x86_64-pc-windows-gnu/release/spotify-remote.exe: $(srcs)
-	cross build --release --target x86_64-pc-windows-gnu --bin spotify-remote
+windows-remote: target/x86_64-pc-windows-gnu/release/forwarder.exe
+target/x86_64-pc-windows-gnu/release/forwarder.exe: $(srcs)
+	cross build --release --target x86_64-pc-windows-gnu --bin forwarder
 
 docker-push: docker
 	docker push 413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver:latest

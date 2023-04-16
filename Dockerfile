@@ -29,10 +29,12 @@ RUN --mount=type=cache,target=/volume/target \
     --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=ssh \
     cargo build --release --target-dir /volume/target && \
-    mv /volume/target/release/receiver .
+    mv /volume/target/release/receiver . && \
+    mv /volume/target/release/player .
 
 FROM runtime
 WORKDIR /app
-COPY --from=builder /build/receiver /usr/local/bin/
+COPY --from=builder /build/receiver/receiver /usr/local/bin/
+COPY --from=builder /build/receiver/player /usr/local/bin/
 
 ENTRYPOINT [ "/usr/local/bin/receiver" ]
