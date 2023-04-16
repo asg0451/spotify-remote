@@ -1,6 +1,5 @@
-
 use std::sync::Arc;
-use std::{sync::RwLock};
+use std::sync::RwLock;
 use tokio::sync::mpsc;
 
 use tonic::{Request, Response, Status};
@@ -28,7 +27,6 @@ impl SpotifyRemote for Server {
         let mut tx = None;
         let mut stream = req.into_inner();
         while let Some(chunk) = stream.message().await? {
-            tracing::trace!("Got chunk: {:?}", chunk);
             if id.is_none() {
                 // first msg
                 tracing::info!(?chunk.id, "stream started");
@@ -42,6 +40,8 @@ impl SpotifyRemote for Server {
                     registry.insert(chunk.id.clone(), rx);
                 }
             }
+
+            tracing::trace!(?id, "sending audio");
 
             tx.as_ref().unwrap().send(chunk.data).await.unwrap();
         }
