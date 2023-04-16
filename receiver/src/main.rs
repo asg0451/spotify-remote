@@ -36,7 +36,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(kys, play_spotify, stop)]
+#[commands(kys, play_spotify, stop, leave)]
 struct General;
 
 #[derive(Debug, Parser)]
@@ -157,7 +157,16 @@ async fn kys(_: &Context, _: &Message, _: Args) -> CommandResult {
 #[command]
 #[only_in(guilds)]
 #[aliases(ps)]
-async fn play_spotify(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    _play_spotify(ctx, msg, args).await.map_err(|e| {
+        tracing::error!("play_spotify failed: {:?}", e);
+        e
+    })?;
+
+    Ok(())
+}
+
+async fn _play_spotify(ctx: &Context, msg: &Message, _args: Args) -> Result<()> {
     // queue up a new input or something
     let guild = msg.guild(&ctx.cache).unwrap();
     let voice_manager = songbird::get(ctx).await.unwrap().clone();
@@ -268,6 +277,34 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 .say(&ctx.http, "Not in a voice channel to play in")
                 .await,
         );
+    }
+
+    Ok(())
+}
+
+#[command]
+#[only_in(guilds)]
+async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
+    let guild_id = msg.guild_id.unwrap();
+
+    let voice_manager = songbird::get(ctx)
+        .await
+        .expect("Songbird Voice client placed in at initialisation.")
+        .clone();
+    let has_handler = voice_manager.get(guild_id).is_some();
+
+    if has_handler {
+        if let Err(e) = voice_manager.remove(guild_id).await {
+            check_msg(
+                msg.channel_id
+                    .say(&ctx.http, format!("Failed: {:?}", e))
+                    .await,
+            );
+        }
+
+        check_msg(msg.channel_id.say(&ctx.http, "Left voice channel").await);
+    } else {
+        check_msg(msg.reply(ctx, "Not in a voice channel").await);
     }
 
     Ok(())
