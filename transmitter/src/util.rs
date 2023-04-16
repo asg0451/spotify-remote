@@ -49,3 +49,13 @@ pub fn load_env(path: &str) -> Result<()> {
     tracing::info!("set env vars from {}", path);
     Ok(())
 }
+
+pub async fn ctrl_c() {
+    use tokio::signal::unix::{signal, SignalKind};
+    let mut int = signal(SignalKind::interrupt()).unwrap();
+    let mut term = signal(SignalKind::terminate()).unwrap();
+    tokio::select! {
+        _ = int.recv() => {}
+        _ = term.recv() => {}
+    };
+}

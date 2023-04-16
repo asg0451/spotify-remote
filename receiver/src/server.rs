@@ -7,6 +7,7 @@ use axum::http::StatusCode;
 use protocol::ForwardCreds;
 
 use crate::creds_registry::CredsRegistry;
+use crate::util;
 
 pub struct Server {
     registry: Arc<RwLock<CredsRegistry>>,
@@ -36,9 +37,7 @@ impl Server {
         tracing::debug!("listening on {}", addr);
         axum::Server::bind(&addr)
             .serve(app.into_make_service())
-            .with_graceful_shutdown(async {
-                let _ = tokio::signal::ctrl_c().await;
-            })
+            .with_graceful_shutdown(util::ctrl_c())
             .await?;
 
         Ok(())

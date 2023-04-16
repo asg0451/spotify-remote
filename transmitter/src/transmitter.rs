@@ -50,7 +50,7 @@ impl Transmitter {
                         }
                     }
                 },
-                 _ = tokio::signal::ctrl_c() => {
+                 _ = crate::util::ctrl_c() => {
                     break;
                 },
                 else => break,

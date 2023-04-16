@@ -117,7 +117,7 @@ async fn main() -> Result<()> {
         _ = disc_jh => {
             tracing::info!("discord client exited");
         }
-        _ = tokio::signal::ctrl_c() => {
+        _ = receiver::util::ctrl_c() => {
             tracing::info!("received ctrl-c");
         }
     };
