@@ -237,7 +237,6 @@ async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult
 
     // jh.await??;
 
-    // https://docs.rs/songbird/latest/src/songbird/input/ffmpeg_src.rs.html#109
     let reader = children_to_reader::<i16>(vec![gstreamer_command]);
 
     let input = Input::new(true, reader, Codec::Pcm, Container::Raw, None);

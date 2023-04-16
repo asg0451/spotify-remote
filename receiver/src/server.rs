@@ -32,7 +32,7 @@ impl SpotifyRemote for Server {
                 tracing::info!(?chunk.id, "stream started");
 
                 id = Some(chunk.id.clone());
-                let (tx_, rx) = mpsc::channel(1024);
+                let (tx_, rx) = mpsc::channel(100);
                 tx = Some(tx_);
 
                 {
@@ -41,7 +41,7 @@ impl SpotifyRemote for Server {
                 }
             }
 
-            tracing::trace!(?id, "sending audio");
+            // tracing::trace!(?id, "sending audio");
 
             tx.as_ref().unwrap().send(chunk.data).await.unwrap();
         }
