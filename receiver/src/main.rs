@@ -166,7 +166,7 @@ async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult
     Ok(())
 }
 
-async fn _play_spotify(ctx: &Context, msg: &Message, _args: Args) -> Result<()> {
+async fn _play_spotify(ctx: &Context, msg: &Message, args: Args) -> Result<()> {
     // queue up a new input or something
     let guild = msg.guild(&ctx.cache).unwrap();
     let voice_manager = songbird::get(ctx).await.unwrap().clone();
@@ -188,7 +188,7 @@ async fn _play_spotify(ctx: &Context, msg: &Message, _args: Args) -> Result<()> 
     res?;
 
     // get the creds
-    let name = msg.author.name.clone();
+    let name = args.message();
     let creds_req = {
         let data = ctx.data.read().await;
         let mut registry = data.get::<CredsRegistry>().unwrap().write().unwrap();

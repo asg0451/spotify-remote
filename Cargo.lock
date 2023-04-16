@@ -765,6 +765,7 @@ dependencies = [
  "hex",
  "librespot",
  "protocol",
+ "rand",
  "reqwest",
  "serde_json",
  "sha1",

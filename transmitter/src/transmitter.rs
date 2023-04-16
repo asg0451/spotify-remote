@@ -62,10 +62,19 @@ impl Transmitter {
     }
 
     async fn forward_creds(&mut self, device_name: String, creds: Credentials) -> Result<()> {
+        let key = generate_id();
+        println!(
+            "\n\n****\tyour key is: {:?} - run the following command in discord: !ps {}\t****\n\n",
+            key, key
+        );
         let resp = self
             .http_client
             .post(self.receiver_addr.clone() + "/api/forward_creds")
-            .json(&protocol::ForwardCreds { device_name, creds })
+            .json(&protocol::ForwardCreds {
+                device_name,
+                creds,
+                key,
+            })
             .send()
             .await?;
         tracing::debug!(?resp, "forward creds response");
@@ -75,4 +84,19 @@ impl Transmitter {
 
 fn device_id(name: &str) -> String {
     hex::encode(Sha1::digest(name.as_bytes()))
+}
+
+fn generate_id() -> String {
+    use rand::seq::SliceRandom;
+
+    let base_words = vec![
+        "bhrist", "blarf", "brad", "balph", "beer", "bilf", "breek", "buch",
+    ];
+    let mut rng = rand::thread_rng();
+
+    let word = base_words.choose(&mut rng).unwrap();
+
+    let num = rand::random::<u32>() % 100;
+
+    format!("{}{}", word, num)
 }

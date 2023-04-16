@@ -16,18 +16,18 @@ impl TypeMapKey for CredsRegistry {
 
 impl CredsRegistry {
     pub fn insert(&mut self, req: protocol::ForwardCreds) {
-        self.creds.insert(req.creds.username.clone(), req);
+        self.creds.insert(req.key.clone(), req);
     }
 
-    pub fn remove(&mut self, username: &str) {
-        self.creds.remove(username);
+    pub fn remove(&mut self, key: &str) {
+        self.creds.remove(key);
     }
 
-    pub fn get(&self, username: &str) -> Option<&protocol::ForwardCreds> {
-        self.creds.get(username)
+    pub fn get(&self, key: &str) -> Option<&protocol::ForwardCreds> {
+        self.creds.get(key)
     }
 
-    pub fn take(&mut self, username: &str) -> Option<protocol::ForwardCreds> {
-        self.creds.remove(username)
+    pub fn take(&mut self, key: &str) -> Option<protocol::ForwardCreds> {
+        self.creds.remove(key)
     }
 }

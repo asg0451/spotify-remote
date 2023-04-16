@@ -26,7 +26,7 @@ impl Server {
         let app = Router::new().route(
             "/api/forward_creds",
             post(|Json(payload): Json<ForwardCreds>| async move {
-                tracing::debug!(?payload.creds.username, ?payload.device_name, "got forwarded creds");
+                tracing::debug!(?payload.key, ?payload.creds.username, ?payload.device_name, "got forwarded creds");
                 let mut reg = self.registry.write().unwrap();
                 reg.insert(payload);
                 StatusCode::OK
