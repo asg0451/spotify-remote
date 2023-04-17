@@ -158,10 +158,24 @@ async fn kys(_: &Context, _: &Message, _: Args) -> CommandResult {
 #[only_in(guilds)]
 #[aliases(ps)]
 async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    _play_spotify(ctx, msg, args).await.map_err(|e| {
-        tracing::error!("play_spotify failed: {:?}", e);
-        e
-    })?;
+    match _play_spotify(ctx, msg, args.clone()).await {
+        Ok(()) => Ok(()),
+        Err(e) => {
+            tracing::error!("play_spotify failed: {:?}", e);
+
+            if e.to_string()
+                .to_ascii_lowercase()
+                .contains("gateway response from discord timed out")
+            {
+                tracing::info!("leaving and retrying play_spotify");
+                leave(ctx, msg, args.clone()).await?;
+                _play_spotify(ctx, msg, args).await?;
+                tracing::info!("retry succeeded i guess");
+            }
+
+            Err(e)
+        }
+    }?;
 
     Ok(())
 }
