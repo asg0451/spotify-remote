@@ -77,7 +77,11 @@ impl Transmitter {
             })
             .send()
             .await?;
-        tracing::debug!(?resp, "forward creds response");
+        let status = resp.status();
+        tracing::debug!(?resp, ?status, "forward creds response");
+        if status != reqwest::StatusCode::OK {
+            anyhow::bail!("forward creds failed with status: {:?}", status);
+        }
         Ok(())
     }
 }
