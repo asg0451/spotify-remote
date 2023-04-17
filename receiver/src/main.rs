@@ -132,7 +132,13 @@ async fn after(ctx: &Context, msg: &Message, command_name: &str, command_result:
         Err(why) => {
             // attempt to communicate error to user
             let _ = msg
-                .reply(ctx, format!("command {} failed: {:?}", command_name, why))
+                .reply(
+                    ctx,
+                    format!(
+                        "command {} failed. maybe try !leave, !stop, or !kys?",
+                        command_name
+                    ),
+                )
                 .await;
             tracing::info!("Command '{}' returned error {:?}", command_name, why)
         }
@@ -169,15 +175,11 @@ async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult
             {
                 tracing::info!("leaving and retrying play_spotify");
                 leave(ctx, msg, args.clone()).await?;
-                _play_spotify(ctx, msg, args).await?;
-                tracing::info!("retry succeeded i guess");
+                return Ok(_play_spotify(ctx, msg, args).await?);
             }
-
-            Err(e)
+            Err(e.into())
         }
-    }?;
-
-    Ok(())
+    }
 }
 
 async fn _play_spotify(ctx: &Context, msg: &Message, args: Args) -> Result<()> {

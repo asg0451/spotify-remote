@@ -3,7 +3,7 @@ use clap::Parser;
 
 #[derive(Debug, Parser)]
 struct Options {
-    #[clap(short, long, default_value = "https://sproter.beagle-chickadee.ts.net")]
+    #[clap(short, long, default_value = "https://sproter.coldcutz.net")]
     receiver_addr: String,
     #[clap(short, long, default_value = "danube")]
     device_name: String,
