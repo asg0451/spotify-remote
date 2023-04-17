@@ -208,7 +208,6 @@ async fn _play_spotify(ctx: &Context, msg: &Message, args: Args) -> Result<()> {
     let creds_req = {
         let data = ctx.data.read().await;
         let mut registry = data.get::<CredsRegistry>().unwrap().write().unwrap();
-        tracing::debug!(?registry);
         registry.take(&name)
     };
 

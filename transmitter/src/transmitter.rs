@@ -41,7 +41,6 @@ impl Transmitter {
                     tracing::debug!("discovery next");
                     match credentials {
                         Some(credentials) => {
-                            tracing::debug!(?credentials, "got creds");
                             self.forward_creds(self.device_name.clone(), credentials).await?;
                             tracing::debug!("forwarded");
                         },
