@@ -1,35 +1,44 @@
 use anyhow::Result;
 
 pub fn setup_logging() -> Result<()> {
-    use tracing_subscriber::{filter::EnvFilter, fmt};
-
-    // // forward log events to tracing
-    // tracing_log::LogTracer::init()?;
+    use tracing_subscriber::filter::EnvFilter;
+    use tracing_subscriber::prelude::*;
 
     let us = env!("CARGO_PKG_NAME").replace('-', "_");
-
-    let filter = EnvFilter::from_default_env()
+    let regular_filter = EnvFilter::from_default_env()
         .add_directive("warn".parse()?)
         .add_directive(format!("{us}=trace").parse()?);
 
-    // .json().with_current_span(true)
-
-    let b = fmt().with_env_filter(filter).with_writer(std::io::stderr);
+    // NOTE: listens at 12.0.0.1:6669
+    let console_layer = console_subscriber::spawn();
+    let registry = tracing_subscriber::registry().with(console_layer);
 
     if !atty::is(atty::Stream::Stderr) {
-        b.json()
-            .with_current_span(true)
-            .with_span_list(true)
-            .with_timer(tracing_subscriber::fmt::time::UtcTime::rfc_3339())
-            .with_target(false)
-            .with_thread_ids(true)
-            .with_thread_names(true)
-            .with_file(true)
-            .with_line_number(true)
-            .with_level(true)
+        registry
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_writer(std::io::stderr)
+                    .json()
+                    .with_current_span(true)
+                    .with_span_list(true)
+                    .with_timer(tracing_subscriber::fmt::time::UtcTime::rfc_3339())
+                    .with_target(false)
+                    .with_thread_ids(true)
+                    .with_thread_names(true)
+                    .with_file(true)
+                    .with_line_number(true)
+                    .with_level(true)
+                    .with_filter(regular_filter),
+            )
             .init();
     } else {
-        b.init();
+        registry
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .with_writer(std::io::stderr)
+                    .with_filter(regular_filter),
+            )
+            .init();
     }
 
     Ok(())
