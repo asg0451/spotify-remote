@@ -228,6 +228,7 @@ async fn _play_spotify(ctx: &Context, msg: &Message, args: Args) -> Result<()> {
         .stderr(Stdio::inherit())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .env("TOKIO_CONSOLE_BIND", "0.0.0.0:0") // so multiple streams don't conflict
         .spawn()?;
     let mut player_stdin = player_command.stdin.take().unwrap();
     serde_json::to_writer(&mut player_stdin, &creds_req.creds)?;
