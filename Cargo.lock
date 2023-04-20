@@ -487,6 +487,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "atty",
+ "console-subscriber",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "console-api"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -809,6 +821,7 @@ dependencies = [
  "anyhow",
  "atty",
  "clap",
+ "common",
  "console-subscriber",
  "futures",
  "futures-util",
@@ -821,7 +834,6 @@ dependencies = [
  "sha1",
  "tokio",
  "tracing",
- "tracing-subscriber",
  "url",
  "zerocopy",
 ]
@@ -2093,6 +2105,7 @@ dependencies = [
  "atty",
  "axum",
  "clap",
+ "common",
  "console-subscriber",
  "futures",
  "futures-core",
@@ -2107,7 +2120,6 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tracing",
- "tracing-subscriber",
  "url",
  "zerocopy",
 ]

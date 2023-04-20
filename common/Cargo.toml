@@ -1,0 +1,19 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { version = "1.0.70", features = ["backtrace"] }
+atty = "0.2.14"
+console-subscriber = "0.1.8"
+tokio = { version = "1.27.0", features = ["full", "tracing"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = [
+    "env-filter",
+    "json",
+    "time",
+    "tracing-log",
+] }

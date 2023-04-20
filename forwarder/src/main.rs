@@ -11,14 +11,14 @@ struct Options {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    forwarder::util::setup_logging()?;
+    common::util::setup_logging()?;
 
     let opts = Options::parse();
 
-    let transmitter =
-        forwarder::transmitter::Transmitter::new(opts.receiver_addr, opts.device_name).await?;
+    let forwarder =
+        forwarder::server::Transmitter::new(opts.receiver_addr, opts.device_name).await?;
 
-    transmitter.run().await?;
+    forwarder.run().await?;
 
     Ok(())
 }

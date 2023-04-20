@@ -53,8 +53,8 @@ impl TypeMapKey for Options {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    receiver::util::setup_logging()?;
-    let _ = receiver::util::load_env(".env");
+    common::util::setup_logging()?;
+    let _ = common::util::load_env(".env");
 
     let opts = Options::parse();
 
@@ -117,7 +117,7 @@ async fn main() -> Result<()> {
         _ = disc_jh => {
             tracing::info!("discord client exited");
         }
-        _ = receiver::util::ctrl_c() => {
+        _ = common::util::ctrl_c() => {
             tracing::info!("received ctrl-c");
         }
     };

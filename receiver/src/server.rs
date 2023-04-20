@@ -7,7 +7,7 @@ use axum::http::StatusCode;
 use protocol::ForwardCreds;
 
 use crate::creds_registry::CredsRegistry;
-use crate::util;
+use common::util;
 
 pub struct Server {
     registry: Arc<RwLock<CredsRegistry>>,
