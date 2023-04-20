@@ -4,10 +4,16 @@ pub fn setup_logging() -> Result<()> {
     use tracing_subscriber::filter::EnvFilter;
     use tracing_subscriber::prelude::*;
 
-    let us = env!("CARGO_PKG_NAME").replace('-', "_");
+    // TODO: how to make this automatic again. need some kind of macro prob
+    // let us = env!("CARGO_PKG_NAME").replace('-', "_");
+    // .add_directive(format!("{us}=trace").parse()?);
+
     let regular_filter = EnvFilter::from_default_env()
         .add_directive("warn".parse()?)
-        .add_directive(format!("{us}=trace").parse()?);
+        .add_directive("common=trace".parse()?)
+        .add_directive("forwarder=trace".parse()?)
+        .add_directive("receiver=trace".parse()?)
+        .add_directive("player=trace".parse()?);
 
     // NOTE: listens at 12.0.0.1:6669
     let console_layer = console_subscriber::spawn();
