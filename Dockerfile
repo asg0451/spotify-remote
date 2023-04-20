@@ -17,11 +17,7 @@ RUN rustup update
 RUN mkdir -p -m 0700 /root/.ssh
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
-COPY ./Cargo.lock ./
-COPY ./receiver/ ./receiver
-# this is stupid
-COPY ./transmitter/src/util.rs ./transmitter/src/util.rs
-COPY ./protocol/ ./protocol
+COPY . .
 
 WORKDIR /build/receiver
 
