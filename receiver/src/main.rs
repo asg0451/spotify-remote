@@ -34,9 +34,9 @@ async fn main() -> Result<()> {
     };
 
     tracing::info!("starting discord bot");
-    let bot = receiver::bot::Bot::new(opts.bot_opts, stream_registry).await?;
+
     let disc_jh = tokio::spawn(async move {
-        bot.run().await?;
+        receiver::bot::run_bot(opts.bot_opts, stream_registry).await?;
         Ok::<(), anyhow::Error>(())
     });
 

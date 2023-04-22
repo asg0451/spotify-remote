@@ -28,3 +28,4 @@ console-subscriber = "0.1.8"
 
 protocol = { path = "../protocol" }
 common = { path = "../common" }
+poise = "0.5.3"

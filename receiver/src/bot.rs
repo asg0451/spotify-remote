@@ -4,25 +4,10 @@ use std::{
 };
 
 use anyhow::Result;
-
 use clap::Parser;
-use serenity::{
-    async_trait,
-    client::{Client, Context, EventHandler},
-    framework::{
-        standard::{
-            macros::{command, group, hook},
-            Args, CommandResult,
-        },
-        StandardFramework,
-    },
-    model::{channel::Message, gateway::Ready},
-    prelude::{GatewayIntents, TypeMapKey},
-};
-use songbird::{
-    input::{children_to_reader, Codec, Container, Input},
-    SerenityInit,
-};
+
+use poise::serenity_prelude::GatewayIntents;
+use songbird::input::{children_to_reader, Codec, Container, Input};
 
 use crate::creds_registry::CredsRegistry;
 
@@ -34,175 +19,117 @@ pub struct BotOptions {
     discord_token: String,
 }
 
-impl TypeMapKey for BotOptions {
-    type Value = Arc<RwLock<BotOptions>>;
+// User data, which is stored and accessible in all command invocations
+struct Data {
+    bot_options: BotOptions,
+    creds_registry: Arc<RwLock<CredsRegistry>>,
+}
+type Error = anyhow::Error;
+type Context<'a> = poise::Context<'a, Data, Error>;
+
+// NOTE: Your bot also needs to be invited with the applications.commands scope. For example, in Discord’s invite link generator (discord.com/developers/applications/XXX/oauth2/url-generator), tick the applications.commands box.
+
+pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry>>) -> Result<()> {
+    // TODO: pare down
+    let intents = GatewayIntents::non_privileged()
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILDS
+        | GatewayIntents::GUILD_BANS
+        | GatewayIntents::GUILD_EMOJIS_AND_STICKERS
+        | GatewayIntents::GUILD_INTEGRATIONS
+        | GatewayIntents::GUILD_WEBHOOKS
+        | GatewayIntents::GUILD_INVITES
+        | GatewayIntents::GUILD_VOICE_STATES
+        | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::GUILD_MESSAGE_REACTIONS
+        | GatewayIntents::GUILD_MESSAGE_TYPING
+        | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::DIRECT_MESSAGE_REACTIONS
+        | GatewayIntents::DIRECT_MESSAGE_TYPING;
+
+    let framework = poise::Framework::builder()
+        .options(poise::FrameworkOptions {
+            commands: vec![play_spotify()],
+            on_error: |error| Box::pin(on_error(error)),
+            ..Default::default()
+        })
+        .token(&opts.discord_token)
+        .intents(intents)
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                Ok(Data {
+                    bot_options: opts,
+                    creds_registry: stream_registry,
+                })
+            })
+        });
+
+    framework.run().await?;
+    Ok(())
 }
 
-struct Handler;
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) {
-        tracing::info!(?ready.user.name, "connected!");
-    }
-}
-
-#[group]
-#[commands(kys, play_spotify, stop, leave)]
-struct General;
-
-pub struct Bot {
-    client: Client,
-}
-
-impl Bot {
-    pub async fn new(
-        opts: BotOptions,
-        stream_registry: Arc<RwLock<CredsRegistry>>,
-    ) -> Result<Self> {
-        let framework = StandardFramework::new()
-            .configure(|c| c.prefix("!"))
-            .group(&GENERAL_GROUP)
-            .after(after)
-            .unrecognised_command(unrecognized_command);
-
-        // TODO: pare down
-        let intents = GatewayIntents::default()
-            | GatewayIntents::MESSAGE_CONTENT
-            | GatewayIntents::GUILDS
-            | GatewayIntents::GUILD_BANS
-            | GatewayIntents::GUILD_EMOJIS_AND_STICKERS
-            | GatewayIntents::GUILD_INTEGRATIONS
-            | GatewayIntents::GUILD_WEBHOOKS
-            | GatewayIntents::GUILD_INVITES
-            | GatewayIntents::GUILD_VOICE_STATES
-            | GatewayIntents::GUILD_MESSAGES
-            | GatewayIntents::GUILD_MESSAGE_REACTIONS
-            | GatewayIntents::GUILD_MESSAGE_TYPING
-            | GatewayIntents::DIRECT_MESSAGES
-            | GatewayIntents::DIRECT_MESSAGE_REACTIONS
-            | GatewayIntents::DIRECT_MESSAGE_TYPING;
-
-        let client = Client::builder(&opts.discord_token, intents)
-            .event_handler(Handler)
-            .framework(framework)
-            .register_songbird()
-            .await
-            .expect("Err creating client");
-
-        {
-            let mut data = client.data.write().await;
-            data.insert::<CredsRegistry>(Arc::clone(&stream_registry));
-            data.insert::<BotOptions>(Arc::new(RwLock::new(opts)));
+async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
+    // This is our custom error handler
+    // They are many errors that can occur, so we only handle the ones we want to customize
+    // and forward the rest to the default handler
+    match error {
+        poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
+        poise::FrameworkError::Command { error, ctx } => {
+            tracing::warn!("Error in command `{}`: {:?}", ctx.command().name, error,);
         }
-
-        Ok(Self { client })
-    }
-
-    pub async fn run(mut self) -> Result<()> {
-        self.client.start().await?;
-        Ok(())
-    }
-}
-
-#[hook]
-async fn after(ctx: &Context, msg: &Message, command_name: &str, command_result: CommandResult) {
-    match command_result {
-        Ok(()) => tracing::info!("Processed command '{}'", command_name),
-        Err(why) => {
-            // attempt to communicate error to user
-            let _ = msg
-                .reply(
-                    ctx,
-                    format!(
-                        "command {} failed. maybe try !leave, !stop, or !kys?",
-                        command_name
-                    ),
-                )
-                .await;
-            tracing::info!("Command '{}' returned error {:?}", command_name, why)
-        }
-    }
-}
-
-#[hook]
-async fn unrecognized_command(ctx: &Context, msg: &Message, command_name: &str) {
-    tracing::info!("unknown command '{}' ", command_name);
-    let _ = msg
-        .reply(ctx, format!("unknown command '{}' ", command_name))
-        .await;
-}
-
-#[command]
-#[only_in(guilds)]
-async fn kys(_: &Context, _: &Message, _: Args) -> CommandResult {
-    // this probably isnt a great idea lol
-    std::process::exit(0);
-}
-
-#[command]
-#[only_in(guilds)]
-#[aliases(ps)]
-async fn play_spotify(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    match _play_spotify(ctx, msg, args.clone()).await {
-        Ok(()) => Ok(()),
-        Err(e) => {
-            tracing::error!("play_spotify failed: {:?}", e);
-
-            if e.to_string()
-                .to_ascii_lowercase()
-                .contains("gateway response from discord timed out")
-            {
-                tracing::info!("leaving and retrying play_spotify");
-                leave(ctx, msg, args.clone()).await?;
-                return Ok(_play_spotify(ctx, msg, args).await?);
+        error => {
+            if let Err(e) = poise::builtins::on_error(error).await {
+                tracing::warn!("Error while handling error: {}", e)
             }
-            Err(e.into())
         }
     }
 }
 
-async fn _play_spotify(ctx: &Context, msg: &Message, args: Args) -> Result<()> {
-    // queue up a new input or something
-    let guild = msg.guild(&ctx.cache).unwrap();
-    let voice_manager = songbird::get(ctx).await.unwrap().clone();
+#[poise::command(slash_command)]
+async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: String) -> Result<()> {
+    let guild = match ctx.guild() {
+        None => {
+            ctx.say("This command can only be used in a guild")
+                .await
+                .unwrap();
+            return Ok(());
+        }
+        Some(g) => g,
+    };
 
-    // try and join even if joined already
+    let voice_manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
     let channel_id = guild
         .voice_states
-        .get(&msg.author.id)
+        .get(&ctx.author().id)
         .and_then(|voice_state| voice_state.channel_id);
 
     let connect_to = match channel_id {
         Some(channel) => channel,
         None => {
-            msg.reply(ctx, "Not in a voice channel").await?;
+            ctx.say("Not in a voice channel").await?;
             return Ok(());
         }
     };
     let (call_handler_lock, res) = voice_manager.join(guild.id, connect_to).await;
     res?;
 
-    // get the creds
-    let name = args.message();
     let creds_req = {
-        let data = ctx.data.read().await;
-        let mut registry = data.get::<CredsRegistry>().unwrap().write().unwrap();
-        registry.take(name)
+        let mut registry = ctx.data().creds_registry.write().unwrap();
+        registry.take(&key)
     };
 
-    if creds_req.is_none() {
-        tracing::info!(?name, "no creds found");
-        msg.reply(ctx, "no stream found").await?;
-        return Ok(());
-    }
-    let creds_req = creds_req.unwrap();
-
-    let player_path = {
-        let data = ctx.data.read().await;
-        let opts = data.get::<BotOptions>().unwrap().read().unwrap();
-        opts.player_path.clone()
+    let creds_req = match creds_req {
+        Some(creds) => creds,
+        None => {
+            ctx.say(format!("No stream found for {key}")).await?;
+            return Ok(());
+        }
     };
+
+    let player_path = ctx.data().bot_options.player_path.clone();
     tracing::debug!(?player_path, "starting player");
+
     let mut player_command = Command::new(player_path)
         .stderr(Stdio::inherit())
         .stdin(Stdio::piped())
@@ -240,7 +167,7 @@ async fn _play_spotify(ctx: &Context, msg: &Message, args: Args) -> Result<()> {
         .stdout(Stdio::piped())
         .spawn()?;
 
-    tracing::debug!(?name, "started player processes");
+    tracing::debug!(?key, "started player processes");
 
     let reader = children_to_reader::<i16>(vec![player_command, gstreamer_command]);
 
@@ -249,43 +176,9 @@ async fn _play_spotify(ctx: &Context, msg: &Message, args: Args) -> Result<()> {
     let mut call_handler = call_handler_lock.lock().await;
     call_handler.play_source(input);
 
-    tracing::debug!(?name, "enqueued source");
+    tracing::debug!(?key, "playing source");
 
-    Ok(())
-}
-
-#[command]
-#[only_in(guilds)]
-async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-    let guild = msg.guild(&ctx.cache).unwrap();
-    let voice_manager = songbird::get(ctx).await.unwrap().clone();
-
-    if let Some(handler_lock) = voice_manager.get(guild.id) {
-        let mut handler = handler_lock.lock().await;
-        handler.stop();
-        msg.reply(ctx, "Queue cleared.").await?;
-    } else {
-        msg.reply(ctx, "Not in a voice channel to play in").await?;
-    }
-
-    Ok(())
-}
-
-#[command]
-#[only_in(guilds)]
-async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
-    let guild_id = msg.guild_id.unwrap();
-    let voice_manager = songbird::get(ctx).await.unwrap().clone();
-    let has_handler = voice_manager.get(guild_id).is_some();
-
-    if has_handler {
-        if let Err(e) = voice_manager.remove(guild_id).await {
-            msg.reply(ctx, format!("Failed: {:?}", e)).await?;
-        }
-        msg.reply(ctx, "Left voice channel").await?;
-    } else {
-        msg.reply(ctx, "Not in a voice channel").await?;
-    }
-
+    // let response = format!("{}'s account was created at {}", u.name, u.created_at());
+    // ctx.say(response).await?;
     Ok(())
 }
