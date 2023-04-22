@@ -178,7 +178,13 @@ async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: Strin
 
     tracing::debug!(?key, "playing source");
 
-    // let response = format!("{}'s account was created at {}", u.name, u.created_at());
-    // ctx.say(response).await?;
+    ctx.say("playing..").await?;
     Ok(())
 }
+
+// TODO: do i need this?\
+// #[poise::command(prefix_command, hide_in_help)]
+// async fn register(ctx: Context<'_>) -> Result<()> {
+//     poise::builtins::register_application_commands_buttons(ctx).await?;
+//     Ok(())
+// }
