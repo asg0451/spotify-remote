@@ -50,7 +50,7 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![play_spotify()],
+            commands: vec![play_spotify(), leave()],
             on_error: |error| Box::pin(on_error(error)),
             ..Default::default()
         })
@@ -184,9 +184,25 @@ async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: Strin
     Ok(())
 }
 
-// TODO: do i need this?\
-// #[poise::command(prefix_command, hide_in_help)]
-// async fn register(ctx: Context<'_>) -> Result<()> {
-//     poise::builtins::register_application_commands_buttons(ctx).await?;
-//     Ok(())
-// }
+#[poise::command(slash_command)]
+async fn leave(ctx: Context<'_>) -> Result<()> {
+    let guild = match ctx.guild() {
+        None => {
+            ctx.say("This command can only be used in a guild")
+                .await
+                .unwrap();
+            return Ok(());
+        }
+        Some(g) => g,
+    };
+
+    let voice_manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
+    let call_handler_lock = voice_manager.get(guild.id);
+    if let Some(call_handler_lock) = call_handler_lock {
+        let mut call_handler = call_handler_lock.lock().await;
+        call_handler.leave().await?;
+    }
+
+    ctx.say("left").await?;
+    Ok(())
+}
