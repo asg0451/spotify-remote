@@ -1,17 +1,8 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
-
-use serenity::prelude::TypeMapKey;
+use std::collections::HashMap;
 
 #[derive(Debug, Default)]
 pub struct CredsRegistry {
     creds: HashMap<String, protocol::ForwardCreds>,
-}
-
-impl TypeMapKey for CredsRegistry {
-    type Value = Arc<RwLock<CredsRegistry>>;
 }
 
 impl CredsRegistry {

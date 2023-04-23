@@ -8,6 +8,7 @@ use clap::Parser;
 
 use poise::serenity_prelude::GatewayIntents;
 use songbird::input::{children_to_reader, Codec, Container, Input};
+use songbird::SerenityInit;
 
 use crate::creds_registry::CredsRegistry;
 
@@ -53,6 +54,7 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
             on_error: |error| Box::pin(on_error(error)),
             ..Default::default()
         })
+        .client_settings(|settings| settings.register_songbird())
         .token(&opts.discord_token)
         .intents(intents)
         .setup(|ctx, _ready, framework| {

@@ -476,17 +476,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
-name = "command_attr"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d999d4e7731150ee14aee8f619c7a9aa9a4385bca0606c4fa95aa2f36a05d9a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "common"
 version = "0.1.0"
 dependencies = [
@@ -1372,12 +1361,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
-name = "levenshtein"
-version = "1.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db13adb97ab515a3691f56e4dbab09283d0b86cb45abd991d8634a9d6f501760"
-
-[[package]]
 name = "lewton"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2187,7 +2170,6 @@ dependencies = [
  "poise",
  "protocol",
  "serde_json",
- "serenity",
  "sha1",
  "songbird",
  "tokio",
@@ -2502,11 +2484,9 @@ dependencies = [
  "bytes",
  "cfg-if",
  "chrono",
- "command_attr",
  "dashmap",
  "flate2",
  "futures",
- "levenshtein",
  "mime",
  "mime_guess",
  "parking_lot",
@@ -2516,13 +2496,11 @@ dependencies = [
  "serde",
  "serde-value",
  "serde_json",
- "static_assertions",
  "time 0.3.20",
  "tokio",
  "tracing",
  "typemap_rev",
  "url",
- "uwl",
 ]
 
 [[package]]
@@ -2678,12 +2656,6 @@ checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 dependencies = [
  "lock_api",
 ]
-
-[[package]]
-name = "static_assertions"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "streamcatcher"
@@ -3225,12 +3197,6 @@ checksum = "5b55a3fef2a1e3b3a00ce878640918820d3c51081576ac657d23af9fc7928fdb"
 dependencies = [
  "getrandom",
 ]
-
-[[package]]
-name = "uwl"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4bf03e0ca70d626ecc4ba6b0763b934b6f2976e8c744088bb3c1d646fbb1ad0"
 
 [[package]]
 name = "valuable"
