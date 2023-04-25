@@ -16,6 +16,8 @@ jobs:
       - run: rustup toolchain install stable --profile minimal
       - run: cargo install cross
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: "release-windows-bin"
       - name: Build windows forwarder release
         run: cross build --release --target x86_64-pc-windows-gnu --bin forwarder
       - name: Release
