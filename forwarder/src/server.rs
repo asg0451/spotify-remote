@@ -92,6 +92,7 @@ fn device_id(name: &str) -> String {
 fn generate_id() -> String {
     use rand::seq::SliceRandom;
 
+    // TODO: less stupid
     let base_words = vec![
         "bhrist", "blarf", "brad", "balph", "beer", "bilf", "breek", "buch",
     ];

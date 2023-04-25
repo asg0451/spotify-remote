@@ -1,4 +1,4 @@
-**/bin/
+bin/
 *.txt
 .env
-**/target/
+target/
