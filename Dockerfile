@@ -19,18 +19,18 @@ RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 COPY . .
 
-WORKDIR /build/receiver
+RUN mkdir bin
 
 RUN --mount=type=cache,target=/volume/target \
     --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=ssh \
     cargo build --release --target-dir /volume/target && \
-    mv /volume/target/release/receiver . && \
-    mv /volume/target/release/player .
+    mv /volume/target/release/receiver bin/ && \
+    mv /volume/target/release/player bin/
 
 FROM runtime
 WORKDIR /app
-COPY --from=builder /build/receiver/receiver /usr/local/bin/
-COPY --from=builder /build/receiver/player /usr/local/bin/
+COPY --from=builder /build/bin/receiver /usr/local/bin/
+COPY --from=builder /build/bin/player /usr/local/bin/
 
 ENTRYPOINT [ "/usr/local/bin/receiver" ]

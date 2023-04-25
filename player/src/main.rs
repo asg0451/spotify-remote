@@ -1,18 +1,13 @@
 use anyhow::Result;
 use clap::Parser;
-use librespot::discovery::Credentials;
-use librespot::{
-    connect::spirc::Spirc,
-    core::{
+use librespot::{discovery::Credentials, connect::spirc::Spirc, core::{
         config::{ConnectConfig, SessionConfig},
         session::Session,
-    },
-    playback::{
+    }, playback::{
         config::{AudioFormat, PlayerConfig, VolumeCtrl},
         mixer::{self, MixerConfig},
         player::Player as SpotifyPlayer,
-    },
-};
+    }};
 use sha1::{Digest, Sha1};
 
 use common::util;
