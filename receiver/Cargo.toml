@@ -13,4 +13,4 @@ serde_json = "1.0.96"
 axum = "0.6.15"
 protocol = { path = "../protocol" }
 common = { path = "../common" }
-poise = "0.5.3"
+poise = "0.5.4"
