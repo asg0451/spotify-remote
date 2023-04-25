@@ -1,3 +1,3 @@
 [workspace]
 
-members = ["forwarder", "receiver", "protocol", "common"]
+members = ["forwarder", "receiver", "player", "protocol", "common"]

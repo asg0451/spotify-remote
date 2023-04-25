@@ -1945,6 +1945,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
+name = "player"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "common",
+ "console-subscriber",
+ "hex",
+ "librespot",
+ "serde_json",
+ "sha1",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "pnet_base"
 version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2165,8 +2181,6 @@ dependencies = [
  "futures",
  "futures-core",
  "futures-util",
- "hex",
- "librespot",
  "poise",
  "protocol",
  "serde_json",
@@ -2176,7 +2190,6 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "url",
- "zerocopy",
 ]
 
 [[package]]
