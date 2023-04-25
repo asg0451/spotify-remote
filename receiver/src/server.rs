@@ -28,8 +28,10 @@ impl Server {
             post(|Json(payload): Json<ForwardCreds>| async move {
                 tracing::debug!(?payload.key, ?payload.creds.username, ?payload.device_name, "got forwarded creds");
                 let mut reg = self.registry.write().unwrap();
-                reg.insert(payload);
-                StatusCode::OK
+                match reg.insert(payload) {
+                    true => StatusCode::OK,
+                    false => StatusCode::CONFLICT,
+                }
             }),
         );
 

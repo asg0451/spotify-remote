@@ -1,6 +1,7 @@
 use anyhow::Result;
 use futures_util::StreamExt;
 use librespot::discovery::Credentials;
+use reqwest::StatusCode;
 use sha1::{Digest, Sha1};
 
 #[derive(Debug)]
@@ -35,13 +36,11 @@ impl Transmitter {
         tracing::debug!("Starting discovery loop");
 
         loop {
-            tracing::debug!("discovery loop");
             tokio::select! {
                 credentials = discovery.next() => {
-                    tracing::debug!("discovery next");
                     match credentials {
                         Some(credentials) => {
-                            self.forward_creds(self.device_name.clone(), credentials).await?;
+                            self.forward_creds(credentials).await?;
                             tracing::debug!("forwarded");
                         },
                         None => {
@@ -60,17 +59,42 @@ impl Transmitter {
         Ok(())
     }
 
-    async fn forward_creds(&mut self, device_name: String, creds: Credentials) -> Result<()> {
-        let key = generate_id();
+    async fn forward_creds(&mut self, creds: Credentials) -> Result<()> {
+        // retry if the code is 409, as that means we picked a key that was already in use
+        let (key, status) = loop {
+            let key = generate_id();
+            let status = self
+                .perform_forward_creds_req(creds.clone(), key.clone())
+                .await?;
+            match status {
+                StatusCode::CONFLICT => {
+                    tracing::debug!("key conflict, retrying");
+                }
+                _ => break (key, status),
+            }
+        };
+
         println!(
             "\n\n****\tyour key is: {:?} - run the following command in discord: /play_spotify {}\t****\n\n",
             key, key
         );
+
+        if status != reqwest::StatusCode::OK {
+            anyhow::bail!("forward creds failed with status: {:?}", status);
+        }
+        Ok(())
+    }
+
+    async fn perform_forward_creds_req(
+        &mut self,
+        creds: Credentials,
+        key: String,
+    ) -> Result<StatusCode> {
         let resp = self
             .http_client
             .post(self.receiver_addr.clone() + "/api/forward_creds")
             .json(&protocol::ForwardCreds {
-                device_name,
+                device_name: self.device_name.clone(),
                 creds,
                 key,
             })
@@ -78,10 +102,7 @@ impl Transmitter {
             .await?;
         let status = resp.status();
         tracing::debug!(?resp, ?status, "forward creds response");
-        if status != reqwest::StatusCode::OK {
-            anyhow::bail!("forward creds failed with status: {:?}", status);
-        }
-        Ok(())
+        Ok(status)
     }
 }
 

@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
 
     let stream_registry = Arc::new(RwLock::new(CredsRegistry::default()));
 
-    tracing::info!("starting grpc server on port {}", opts.grpc_port);
+    tracing::info!("starting http server on port {}", opts.grpc_port);
     let rpc_server_jh = {
         let registry = Arc::clone(&stream_registry);
         tokio::spawn(async move {
@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
 
     tokio::select! {
         _ = rpc_server_jh => {
-            tracing::info!("grpc server exited");
+            tracing::info!("http server exited");
         }
         _ = disc_jh => {
             tracing::info!("discord client exited");
