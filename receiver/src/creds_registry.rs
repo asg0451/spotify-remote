@@ -10,14 +10,6 @@ impl CredsRegistry {
         self.creds.insert(req.key.clone(), req);
     }
 
-    pub fn remove(&mut self, key: &str) {
-        self.creds.remove(key);
-    }
-
-    pub fn get(&self, key: &str) -> Option<&protocol::ForwardCreds> {
-        self.creds.get(key)
-    }
-
     pub fn take(&mut self, key: &str) -> Option<protocol::ForwardCreds> {
         self.creds.remove(key)
     }

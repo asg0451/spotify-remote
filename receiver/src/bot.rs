@@ -193,9 +193,9 @@ async fn leave(ctx: Context<'_>) -> Result<()> {
     if let Some(call_handler_lock) = call_handler_lock {
         let mut call_handler = call_handler_lock.lock().await;
         call_handler.leave().await?;
+        ctx.say("left").await?;
     }
 
-    ctx.say("left").await?;
     Ok(())
 }
 
@@ -213,8 +213,8 @@ async fn stop(ctx: Context<'_>) -> Result<()> {
     if let Some(call_handler_lock) = call_handler_lock {
         let mut call_handler = call_handler_lock.lock().await;
         call_handler.stop();
+        ctx.say("stopped playback").await?;
     }
 
-    ctx.say("stopped playback").await?;
     Ok(())
 }
