@@ -843,11 +843,8 @@ name = "forwarder"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atty",
  "clap",
  "common",
- "console-subscriber",
- "futures",
  "futures-util",
  "hex",
  "librespot",
@@ -858,8 +855,6 @@ dependencies = [
  "sha1",
  "tokio",
  "tracing",
- "url",
- "zerocopy",
 ]
 
 [[package]]
@@ -1951,7 +1946,6 @@ dependencies = [
  "anyhow",
  "clap",
  "common",
- "console-subscriber",
  "hex",
  "librespot",
  "serde_json",
@@ -2173,23 +2167,15 @@ name = "receiver"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atty",
  "axum",
  "clap",
  "common",
- "console-subscriber",
- "futures",
- "futures-core",
- "futures-util",
  "poise",
  "protocol",
  "serde_json",
- "sha1",
  "songbird",
  "tokio",
- "tokio-stream",
  "tracing",
- "url",
 ]
 
 [[package]]
