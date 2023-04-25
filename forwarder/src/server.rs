@@ -63,7 +63,7 @@ impl Transmitter {
     async fn forward_creds(&mut self, device_name: String, creds: Credentials) -> Result<()> {
         let key = generate_id();
         println!(
-            "\n\n****\tyour key is: {:?} - run the following command in discord: !ps {}\t****\n\n",
+            "\n\n****\tyour key is: {:?} - run the following command in discord: /play_spotify {}\t****\n\n",
             key, key
         );
         let resp = self
