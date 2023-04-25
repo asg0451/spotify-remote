@@ -1,4 +1,4 @@
-name: Forwarder Windows
+name: Release
 
 on:
   push:
@@ -9,7 +9,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-windows-binary:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,3 +23,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: target/x86_64-pc-windows-gnu/release/forwarder.exe
+# TODO: build docker images
