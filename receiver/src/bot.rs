@@ -72,9 +72,6 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
-    // This is our custom error handler
-    // They are many errors that can occur, so we only handle the ones we want to customize
-    // and forward the rest to the default handler
     match error {
         poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
         poise::FrameworkError::Command { error, ctx } => {
@@ -177,7 +174,6 @@ async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: Strin
     call_handler.play_source(input);
 
     tracing::debug!(?key, "playing source");
-
     ctx.say("playing..").await?;
     Ok(())
 }
