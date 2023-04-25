@@ -50,7 +50,7 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![play_spotify(), leave()],
+            commands: vec![play_spotify(), leave(), stop()],
             on_error: |error| Box::pin(on_error(error)),
             ..Default::default()
         })
@@ -92,9 +92,7 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
 async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: String) -> Result<()> {
     let guild = match ctx.guild() {
         None => {
-            ctx.say("This command can only be used in a guild")
-                .await
-                .unwrap();
+            ctx.say("This command can only be used in a guild").await?;
             return Ok(());
         }
         Some(g) => g,
@@ -188,9 +186,7 @@ async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: Strin
 async fn leave(ctx: Context<'_>) -> Result<()> {
     let guild = match ctx.guild() {
         None => {
-            ctx.say("This command can only be used in a guild")
-                .await
-                .unwrap();
+            ctx.say("This command can only be used in a guild").await?;
             return Ok(());
         }
         Some(g) => g,
@@ -204,5 +200,25 @@ async fn leave(ctx: Context<'_>) -> Result<()> {
     }
 
     ctx.say("left").await?;
+    Ok(())
+}
+
+#[poise::command(slash_command)]
+async fn stop(ctx: Context<'_>) -> Result<()> {
+    let guild = match ctx.guild() {
+        None => {
+            ctx.say("This command can only be used in a guild").await?;
+            return Ok(());
+        }
+        Some(g) => g,
+    };
+    let voice_manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
+    let call_handler_lock = voice_manager.get(guild.id);
+    if let Some(call_handler_lock) = call_handler_lock {
+        let mut call_handler = call_handler_lock.lock().await;
+        call_handler.stop();
+    }
+
+    ctx.say("stopped playback").await?;
     Ok(())
 }
