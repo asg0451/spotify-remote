@@ -1,6 +1,6 @@
 use std::{
     process::{Command, Stdio},
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
 };
 
 use anyhow::Result;
@@ -9,8 +9,12 @@ use clap::Parser;
 use poise::serenity_prelude::GatewayIntents;
 use songbird::input::{children_to_reader, Codec, Container, Input};
 use songbird::SerenityInit;
+use tokio_util::sync::CancellationToken;
 
-use crate::creds_registry::CredsRegistry;
+use crate::{
+    creds_registry::CredsRegistry,
+    player_events_manager::{MsgHandle, PlayerEventWithToken, PlayerEventsManager},
+};
 
 #[derive(Debug, Parser, Clone)]
 pub struct BotOptions {
@@ -24,13 +28,19 @@ pub struct BotOptions {
 struct Data {
     bot_options: BotOptions,
     creds_registry: Arc<RwLock<CredsRegistry>>,
+    add_player_event_message: tokio::sync::mpsc::Sender<(String, MsgHandle)>,
 }
 type Error = anyhow::Error;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 // NOTE: Your bot also needs to be invited with the applications.commands scope. For example, in Discord’s invite link generator (discord.com/developers/applications/XXX/oauth2/url-generator), tick the applications.commands box.
 
-pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry>>) -> Result<()> {
+pub async fn run_bot(
+    opts: BotOptions,
+    stream_registry: Arc<RwLock<CredsRegistry>>,
+    recv_pe: tokio::sync::mpsc::Receiver<PlayerEventWithToken>,
+    cancel: CancellationToken,
+) -> Result<()> {
     // TODO: pare down
     let intents = GatewayIntents::non_privileged()
         | GatewayIntents::MESSAGE_CONTENT
@@ -48,6 +58,8 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
         | GatewayIntents::DIRECT_MESSAGE_REACTIONS
         | GatewayIntents::DIRECT_MESSAGE_TYPING;
 
+    let pem_cancel = cancel.clone();
+
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![play_spotify(), leave(), stop()],
@@ -59,15 +71,30 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
         .intents(intents)
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
+                // start player events mgr in here so we have access to a ctx for editing msgs
+                let mut mgr = PlayerEventsManager::new(ctx.clone(), pem_cancel.clone(), recv_pe);
+                let add_player_event_message = mgr.add_msg_id.clone();
+                tokio::spawn(async move {
+                    mgr.run().await.unwrap();
+                });
+
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(Data {
                     bot_options: opts,
                     creds_registry: stream_registry,
+                    add_player_event_message,
                 })
             })
         });
 
-    framework.run().await?;
+    tokio::select! {
+        _ = cancel.cancelled() => {
+            tracing::info!("Bot cancelled");
+        }
+        res = framework.run() => {
+            res?;
+        }
+    };
     Ok(())
 }
 
@@ -127,7 +154,9 @@ async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: Strin
     let player_path = ctx.data().bot_options.player_path.clone();
     tracing::debug!(?player_path, "starting player");
 
+    let pe_token = gen_token();
     let mut player_command = Command::new(player_path)
+        .args(["--player-updates-token", &pe_token]) // TODO: pe addr too
         .stderr(Stdio::inherit())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -174,7 +203,20 @@ async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: Strin
     call_handler.play_source(input);
 
     tracing::debug!(?key, "playing source");
-    ctx.say("playing..").await?;
+    let status_reply = ctx.say("playing..").await?;
+    let msg = status_reply.message().await?;
+
+    ctx.data()
+        .add_player_event_message
+        .send((
+            pe_token,
+            MsgHandle {
+                channel_id: msg.channel_id.0,
+                msg_id: msg.id.0,
+            },
+        ))
+        .await?;
+
     Ok(())
 }
 
@@ -217,4 +259,13 @@ async fn stop(ctx: Context<'_>) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn gen_token() -> String {
+    use base64::Engine;
+    use rand::RngCore;
+    let mut rng = rand::thread_rng();
+    let mut token = [0u8; 32];
+    rng.fill_bytes(&mut token);
+    base64::engine::general_purpose::STANDARD.encode(&token)
 }
