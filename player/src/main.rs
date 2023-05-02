@@ -125,7 +125,11 @@ pub async fn main() -> Result<()> {
         _ = updates_task => {
             tracing::debug!("updates task finished");
         }
-        _ = util::ctrl_c() => {}, // TODO: on shutdown, send player events shutdown?
+        _ = util::ctrl_c() => {
+            // TODO: send player events shutdown?
+            // TODO: cancel token? +wait?
+            tracing::debug!("ctrl-c received");
+        },
     };
 
     // Shutdown spirc gracefully if necessary

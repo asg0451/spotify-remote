@@ -55,7 +55,6 @@ impl PlayerEventsManager {
                     self.handle_event(event).await?;
                 }
                 _ = self.cancel.cancelled() => break,
-                else => break,
             }
         }
         Ok(())
