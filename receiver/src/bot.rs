@@ -1,6 +1,6 @@
 use std::{
     process::{Command, Stdio},
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, RwLock},
 };
 
 use anyhow::Result;
@@ -267,5 +267,5 @@ fn gen_token() -> String {
     let mut rng = rand::thread_rng();
     let mut token = [0u8; 32];
     rng.fill_bytes(&mut token);
-    base64::engine::general_purpose::STANDARD.encode(&token)
+    base64::engine::general_purpose::STANDARD.encode(token)
 }

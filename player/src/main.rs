@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use librespot::{
@@ -164,14 +162,11 @@ async fn send_player_event(
 // have to do this here since this is the only place we have a session
 async fn get_track_info(session: &Session, track_id: SpotifyId) -> Result<TrackInfo> {
     use librespot::metadata::{Album, Artist, Track};
-    let track = Track::get(&session, track_id)
+    let track = Track::get(session, track_id)
         .await
         .map_err(|_| anyhow!("error getting track"))?;
 
-    let artists = track
-        .artists
-        .into_iter()
-        .map(|id| Artist::get(&session, id));
+    let artists = track.artists.into_iter().map(|id| Artist::get(session, id));
 
     let artists = futures::future::join_all(artists)
         .await
@@ -179,7 +174,7 @@ async fn get_track_info(session: &Session, track_id: SpotifyId) -> Result<TrackI
         .collect::<Result<Vec<_>, _>>()
         .map_err(|_| anyhow!("error getting artists"))?;
 
-    let album = Album::get(&session, track.album)
+    let album = Album::get(session, track.album)
         .await
         .map_err(|_| anyhow!("error getting album"))?;
 

@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::sync::Mutex;
+
 use std::sync::RwLock;
 
 use anyhow::Result;
@@ -18,7 +18,6 @@ use tokio_util::sync::CancellationToken;
 
 use crate::creds_registry::CredsRegistry;
 use crate::player_events_manager::PlayerEventWithToken;
-use common::util;
 
 #[derive(Debug, Clone)]
 pub struct AppState {
