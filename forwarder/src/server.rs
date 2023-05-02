@@ -51,7 +51,6 @@ impl Transmitter {
                  _ = tokio::signal::ctrl_c() => {
                     break;
                 },
-                else => break,
             }
         }
         tracing::info!("Gracefully shutting down");
