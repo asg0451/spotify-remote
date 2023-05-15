@@ -50,7 +50,7 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![play_spotify(), leave(), stop()],
+            commands: vec![play_spotify(), leave(), stop(), restart()],
             on_error: |error| Box::pin(on_error(error)),
             ..Default::default()
         })
@@ -217,4 +217,10 @@ async fn stop(ctx: Context<'_>) -> Result<()> {
     }
 
     Ok(())
+}
+
+// HACK: there's a bug that makes the bot get into a state where it cant play anymore. so let users unblock themselves
+#[poise::command(slash_command)]
+async fn restart(_ctx: Context<'_>) -> Result<()> {
+    std::process::exit(0);
 }
