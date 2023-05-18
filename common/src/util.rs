@@ -75,3 +75,14 @@ pub async fn ctrl_c() {
         _ = term.recv() => {}
     };
 }
+
+#[cfg(unix)]
+pub async fn ctrl_c_and_pipe() {
+    use tokio::signal::unix::{signal, SignalKind};
+    let others = ctrl_c();
+    let mut pipe = signal(SignalKind::pipe()).unwrap();
+    tokio::select! {
+        _ = others => {}
+        _ = pipe.recv() => {}
+    };
+}
