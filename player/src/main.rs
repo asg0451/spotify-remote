@@ -85,7 +85,7 @@ pub async fn main() -> Result<()> {
             tracing::debug!("spirc task finished");
         }
         _ = util::ctrl_c_and_pipe() => {
-            // what happens is songbird sends SIGKILL(9) to the last child -- gstreamer. presumably then its stdin is closed, which means out stdout is closed
+            // what happens is songbird sends SIGKILL(9) to the last child -- gstreamer. presumably then its stdin is closed, which means our stdout is closed -> SIGPIPE
             tracing::debug!("received ctrl-c or pipe");
         },
     };
