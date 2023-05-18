@@ -8,6 +8,7 @@ use receiver::{bot::BotOptions, creds_registry::CredsRegistry};
 
 #[derive(Debug, Parser)]
 struct Options {
+    // TODO: rename me
     #[clap(short, long, default_value = "8080")]
     grpc_port: u16,
     #[clap(flatten)]
