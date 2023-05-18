@@ -86,6 +86,7 @@ pub async fn main() -> Result<()> {
         }
         _ = util::ctrl_c_and_pipe() => {
             // what happens is songbird sends SIGKILL(9) to the last child -- gstreamer. presumably then its stdin is closed, which means our stdout is closed -> SIGPIPE
+            // TODO: this still doesnt work. the player throws an error on pipe write and then something....idk
             tracing::debug!("received ctrl-c or pipe");
         },
     };
