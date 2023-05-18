@@ -78,15 +78,24 @@ pub async fn main() -> Result<()> {
 
     tracing::debug!("connected!");
 
+    tokio::pin!(spirc_task);
+
     tokio::select! {
-        _ = spirc_task => {
+        _ = &mut spirc_task => {
             tracing::debug!("spirc task finished");
         }
-        _ = util::ctrl_c() => {},
+        _ = util::ctrl_c_and_pipe() => {
+            // what happens is songbird sends SIGKILL(9) to the last child -- gstreamer. presumably then its stdin is closed, which means our stdout is closed -> SIGPIPE
+            tracing::debug!("received ctrl-c or pipe");
+        },
     };
 
+    tracing::debug!("exiting");
     // Shutdown spirc gracefully if necessary
     spirc.shutdown();
+    // wait for the task to finish
+    tokio::time::timeout(std::time::Duration::from_secs(5), spirc_task).await?;
+    tracing::debug!("spirc task finished");
 
     Ok(())
 }
