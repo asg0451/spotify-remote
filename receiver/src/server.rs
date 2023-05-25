@@ -35,6 +35,8 @@ impl Server {
             }),
         );
 
+        // TODO: maybe keep a connection with heartbeat open from forwarder, kill the player if it dies. to better simulate a real local device
+
         let addr = SocketAddr::from(([0, 0, 0, 0], port));
         tracing::debug!("listening on {}", addr);
         axum::Server::bind(&addr)
