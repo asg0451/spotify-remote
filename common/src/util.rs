@@ -10,6 +10,8 @@ pub fn setup_logging() -> Result<()> {
 
     let regular_filter = EnvFilter::from_default_env()
         .add_directive("warn".parse()?)
+        // TODO: it looks like /stop sometimes isnt making the player stop. i see gstreamer and player still alive in htop. why?
+        .add_directive("songbird=debug".parse()?)
         .add_directive("common=trace".parse()?)
         .add_directive("forwarder=trace".parse()?)
         .add_directive("receiver=trace".parse()?)
