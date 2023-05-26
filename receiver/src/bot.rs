@@ -199,6 +199,8 @@ async fn leave(ctx: Context<'_>) -> Result<()> {
     Ok(())
 }
 
+// TODO: it looks like /stop sometimes isnt making the player stop. i see gstreamer and player still alive in htop. why?
+// TODO: although, if you then actually play something on spotify, it hits the broken pipe -> exit(1)
 #[poise::command(slash_command)]
 async fn stop(ctx: Context<'_>) -> Result<()> {
     let guild = match ctx.guild() {
