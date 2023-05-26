@@ -8,11 +8,16 @@ pub fn setup_logging() -> Result<()> {
     // let us = env!("CARGO_PKG_NAME").replace('-', "_");
     // .add_directive(format!("{us}=trace").parse()?);
 
-    let directive =
-        "warn,songbird=debug,common=trace,forwarder=trace,receiver=trace,player=trace".parse()?;
-    let regular_filter = EnvFilter::builder()
-        .with_default_directive(directive)
-        .from_env()?;
+    let mut regular_filter = EnvFilter::from_default_env();
+    if let Err(_) = std::env::var(EnvFilter::DEFAULT_ENV) {
+        regular_filter = regular_filter
+            .add_directive("warn".parse()?)
+            .add_directive("songbird=debug".parse()?)
+            .add_directive("common=trace".parse()?)
+            .add_directive("forwarder=trace".parse()?)
+            .add_directive("receiver=trace".parse()?)
+            .add_directive("player=trace".parse()?);
+    }
 
     // NOTE: listens at 12.0.0.1:6669
     let console_layer = console_subscriber::spawn();
@@ -84,4 +89,14 @@ pub async fn ctrl_c_and_pipe() {
         _ = others => {}
         _ = pipe.recv() => {}
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_logging() {
+        setup_logging().unwrap();
+        tracing::info!("test");
+    }
 }
