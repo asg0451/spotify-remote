@@ -8,13 +8,11 @@ pub fn setup_logging() -> Result<()> {
     // let us = env!("CARGO_PKG_NAME").replace('-', "_");
     // .add_directive(format!("{us}=trace").parse()?);
 
-    let regular_filter = EnvFilter::from_default_env()
-        .add_directive("warn".parse()?)
-        .add_directive("songbird=debug".parse()?)
-        .add_directive("common=trace".parse()?)
-        .add_directive("forwarder=trace".parse()?)
-        .add_directive("receiver=trace".parse()?)
-        .add_directive("player=trace".parse()?);
+    let directive =
+        "warn,songbird=debug,common=trace,forwarder=trace,receiver=trace,player=trace".parse()?;
+    let regular_filter = EnvFilter::builder()
+        .with_default_directive(directive)
+        .from_env()?;
 
     // NOTE: listens at 12.0.0.1:6669
     let console_layer = console_subscriber::spawn();
