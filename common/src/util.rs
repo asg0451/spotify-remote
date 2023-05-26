@@ -12,7 +12,7 @@ pub fn setup_logging() -> Result<()> {
     if let Err(_) = std::env::var(EnvFilter::DEFAULT_ENV) {
         regular_filter = regular_filter
             .add_directive("warn".parse()?)
-            .add_directive("songbird=debug".parse()?)
+            .add_directive("songbird=trace".parse()?)
             .add_directive("common=trace".parse()?)
             .add_directive("forwarder=trace".parse()?)
             .add_directive("receiver=trace".parse()?)
