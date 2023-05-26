@@ -35,7 +35,11 @@ deploy-multiarch: docker-multiarch
 	$(MAKE) docker-arm-builder-down
 
 docker-multiarch: Dockerfile $(srcs) docker-arm-ensure-builder-up docker-creds-refresh
-	docker buildx build --builder multiarch --platform linux/arm64,linux/amd64 --push -t 413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver:latest --ssh default .
+	docker buildx build --builder multiarch --platform linux/arm64,linux/amd64 --push \
+		-t 413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver:latest --ssh default \
+		--cache-to=type=local,dest=/tmp/.buildx-cache/spotify-remote \
+		--cache-from=type=local,src=/tmp/.buildx-cache/spotify-remote \
+		.
 
 docker-arm-ensure-builder-up:
 	aws ec2 describe-instances --instance-ids i-00ab99709da8e22aa | jq -r '.Reservations[].Instances[].State.Name == "stopped"' | grep false || $(MAKE) docker-arm-builder-up
