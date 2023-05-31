@@ -218,9 +218,16 @@ async fn stop(ctx: Context<'_>) -> Result<()> {
     {
         let mut pid = ctx.data().currently_playing_pid.read().unwrap();
         if let Some(pid) = pid.as_ref().take() {
+            let pid = Pid::from_raw(pid as i32);
             tracing::debug!(?pid, "asking player to stop");
-            let _ = nix::sys::signal::kill(Pid::from_raw(pid as i32), Signal::SIGUSR1);
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            let _ = nix::sys::signal::kill(pid, Signal::SIGUSR1);
+
+            // wait for it to exit, or timeout
+            tokio::select! {
+                _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {},
+                _ = nix::sys::wait::waitpid(pid, None) => {},
+            }
+
         }
     }
 
