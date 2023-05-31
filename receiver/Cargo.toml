@@ -14,3 +14,4 @@ axum = "0.6.15"
 protocol = { path = "../protocol" }
 common = { path = "../common" }
 poise = "0.5.3"
+nix = "0.26.2"

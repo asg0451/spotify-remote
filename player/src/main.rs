@@ -90,6 +90,9 @@ pub async fn main() -> Result<()> {
             // TODO: what can we do about that
             tracing::debug!("received ctrl-c or pipe");
         },
+        _ = util::usr1() => {
+            tracing::debug!("got SIGUSR1, shutting down")
+        },
     };
 
     tracing::debug!("exiting");

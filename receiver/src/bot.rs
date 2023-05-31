@@ -20,10 +20,11 @@ pub struct BotOptions {
     discord_token: String,
 }
 
-// User data, which is stored and accessible in all command invocations
+#[derive(Debug)]
 struct Data {
     bot_options: BotOptions,
     creds_registry: Arc<RwLock<CredsRegistry>>,
+    currently_playing_pid: Arc<RwLock<Option<u32>>>,
 }
 type Error = anyhow::Error;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -63,6 +64,7 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
                 Ok(Data {
                     bot_options: opts,
                     creds_registry: stream_registry,
+                    currently_playing_pid: Arc::new(RwLock::new(None)),
                 })
             })
         });
@@ -170,6 +172,8 @@ async fn play_spotify(ctx: Context<'_>, #[description = "Stream key"] key: Strin
 
     let input = Input::new(true, reader, Codec::Pcm, Container::Raw, None);
 
+    // TODO: send player a signal on stop, so it can shut down gracefully before it's Dropped
+
     let mut call_handler = call_handler_lock.lock().await;
     call_handler.play_source(input);
 
@@ -210,6 +214,16 @@ async fn stop(ctx: Context<'_>) -> Result<()> {
         }
         Some(g) => g,
     };
+
+    {
+        let mut pid = ctx.data().currently_playing_pid.read().unwrap();
+        if let Some(pid) = pid.as_ref().take() {
+            tracing::debug!(?pid, "asking player to stop");
+            let _ = nix::sys::signal::kill(Pid::from_raw(pid as i32), Signal::SIGUSR1);
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        }
+    }
+
     let voice_manager = songbird::get(ctx.serenity_context()).await.unwrap().clone();
     let call_handler_lock = voice_manager.get(guild.id);
     if let Some(call_handler_lock) = call_handler_lock {

@@ -80,16 +80,14 @@ pub async fn ctrl_c() {
     };
 }
 
+
 #[cfg(unix)]
-pub async fn ctrl_c_and_pipe() {
+pub async fn usr1() {
     use tokio::signal::unix::{signal, SignalKind};
-    let others = ctrl_c();
-    let mut pipe = signal(SignalKind::pipe()).unwrap();
-    tokio::select! {
-        _ = others => {}
-        _ = pipe.recv() => {}
-    };
+    let mut usr1 = signal(SignalKind::user()).unwrap();
+    let _ = usr1.recv().await
 }
+
 
 #[cfg(test)]
 mod tests {
