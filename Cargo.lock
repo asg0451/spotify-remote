@@ -851,7 +851,6 @@ dependencies = [
  "protocol",
  "rand",
  "reqwest",
- "serde_json",
  "sha1",
  "tokio",
  "tracing",
@@ -1390,7 +1389,7 @@ dependencies = [
  "if-addrs",
  "log",
  "multimap",
- "nix",
+ "nix 0.23.2",
  "rand",
  "socket2",
  "thiserror",
@@ -1731,6 +1730,18 @@ dependencies = [
  "cfg-if",
  "libc",
  "memoffset",
+]
+
+[[package]]
+name = "nix"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfdda3d196821d6af13126e40375cdf7da646a96114af134d5f417a9a1dc8e1a"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "libc",
+ "static_assertions",
 ]
 
 [[package]]
@@ -2170,6 +2181,7 @@ dependencies = [
  "axum",
  "clap",
  "common",
+ "nix 0.26.2",
  "poise",
  "protocol",
  "serde_json",
@@ -2655,6 +2667,12 @@ checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 dependencies = [
  "lock_api",
 ]
+
+[[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "streamcatcher"
