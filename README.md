@@ -2,12 +2,12 @@
 
 [![Build](https://github.com/asg0451/spotify-remote/actions/workflows/build.yaml/badge.svg)](https://github.com/asg0451/spotify-remote/actions/workflows/build.yaml)
 
-This is a self-hosted Discord bot that allows you to stream to it as if it was a Spotify player on your local network.
+This is a self-hosted Discord bot that allows users to stream to it as if it was a Spotify player on your local network. Any user can start a stream to the bot, `/play_spotify` it, and start playing music in their voice channel.
 
 ## Getting started
 
 1. Create a Discord app and bot.
-1. Run the `receiver` Docker image either locally or on a server, such as via: `$ docker run -p8080:8080 -e DISCORD_TOKEN=<your-token> TODO_image_name`
+1. Run the `receiver` Docker image either locally or on a server, such as via: `$ docker run -p8080:8080 -e DISCORD_TOKEN=<your-token> TODO_image_name`, or via docker-compose, k8s, etc. It is intended to run as a persistent service.
 
     - NOTE: if you end up exposing this service over the internet, it's strongly recommended to use https!
 1. Invite the bot to your server. Make sure it has sufficient permissions to join voice channels, send messages, do slash commands, and read message contents.
