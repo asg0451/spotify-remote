@@ -23,7 +23,7 @@ jobs:
           key: "release-forwarder-bin"
       - name: Build windows forwarder release
         run: cross build --release --target x86_64-pc-windows-gnu --bin forwarder
-      - name: Build linux forwarder release # TODO: can we do this in parallel by creating the release first?
+      - name: Build linux forwarder release # TODO: can we do this in parallel by creating the release first? https://dev.to/eugenebabichenko/automated-multi-platform-releases-with-github-actions-1abg
         run: cargo build --release --bin forwarder
       # TODO: macos forwarder.app?
       - name: Release

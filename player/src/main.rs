@@ -52,7 +52,7 @@ pub async fn main() -> Result<()> {
         ..Default::default()
     };
 
-    // TODO: or bitrate 360
+    // TODO: or bitrate 360? configurable?
     let player_config = PlayerConfig::default();
 
     tracing::debug!("connecting to spotify...");
@@ -60,7 +60,6 @@ pub async fn main() -> Result<()> {
     let (session, _reusable_creds) =
         Session::connect(session_config.clone(), creds, None, false).await?;
 
-    let mixer_config = mixer_config.clone();
     let mixer = (mixer)(mixer_config);
     let player_config = player_config.clone();
     let connect_config = connect_config.clone();
@@ -93,7 +92,7 @@ pub async fn main() -> Result<()> {
     };
 
     tracing::debug!("exiting");
-    // Shutdown spirc gracefully if necessary
+    // shutdown spirc gracefully
     spirc.shutdown();
     // wait for the task to finish
     tokio::time::timeout(std::time::Duration::from_secs(5), spirc_task).await?;

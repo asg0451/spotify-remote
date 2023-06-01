@@ -9,7 +9,7 @@ pub fn setup_logging() -> Result<()> {
     // .add_directive(format!("{us}=trace").parse()?);
 
     let mut regular_filter = EnvFilter::from_default_env();
-    if let Err(_) = std::env::var(EnvFilter::DEFAULT_ENV) {
+    if std::env::var(EnvFilter::DEFAULT_ENV).is_err() {
         regular_filter = regular_filter
             .add_directive("warn".parse()?)
             .add_directive("songbird=trace".parse()?)
