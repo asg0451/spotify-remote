@@ -8,9 +8,8 @@ use receiver::{bot::BotOptions, creds_registry::CredsRegistry};
 
 #[derive(Debug, Parser)]
 struct Options {
-    // TODO: rename me
     #[clap(short, long, default_value = "8080")]
-    grpc_port: u16,
+    port: u16,
     #[clap(flatten)]
     bot_opts: BotOptions,
 }
@@ -24,12 +23,12 @@ async fn main() -> Result<()> {
 
     let stream_registry = Arc::new(RwLock::new(CredsRegistry::default()));
 
-    tracing::info!("starting http server on port {}", opts.grpc_port);
+    tracing::info!("starting http server on port {}", opts.port);
     let rpc_server_jh = {
         let registry = Arc::clone(&stream_registry);
         tokio::spawn(async move {
             let srv = receiver::server::Server::new(registry);
-            srv.run(opts.grpc_port).await?;
+            srv.run(opts.port).await?;
             Ok::<(), anyhow::Error>(())
         })
     };
@@ -41,6 +40,7 @@ async fn main() -> Result<()> {
         Ok::<(), anyhow::Error>(())
     });
 
+    // TODO: more graceful shutdown
     tokio::select! {
         _ = rpc_server_jh => {
             tracing::info!("http server exited");
