@@ -24,7 +24,7 @@ RUN mkdir bin
 RUN --mount=type=cache,target=/volume/target \
     --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=ssh \
-    cargo build --release --target-dir /volume/target && \
+    cargo build  --config net.git-fetch-with-cli=true --release --target-dir /volume/target && \
     mv /volume/target/release/receiver bin/ && \
     mv /volume/target/release/player bin/
 
