@@ -1,9 +1,9 @@
 use std::{
     process::{Command, Stdio},
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
 };
 
-use anyhow::Result;
+use anyhow::{anyhow, Context as _, Result};
 use clap::Parser;
 
 use poise::serenity_prelude::GatewayIntents;
@@ -24,7 +24,7 @@ pub struct BotOptions {
 struct Data {
     bot_options: BotOptions,
     creds_registry: Arc<RwLock<CredsRegistry>>,
-    currently_playing_pid: Arc<RwLock<Option<u32>>>,
+    currently_playing_pid: Arc<Mutex<Option<u32>>>,
 }
 type Error = anyhow::Error;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -64,7 +64,7 @@ pub async fn run_bot(opts: BotOptions, stream_registry: Arc<RwLock<CredsRegistry
                 Ok(Data {
                     bot_options: opts,
                     creds_registry: stream_registry,
-                    currently_playing_pid: Arc::new(RwLock::new(None)),
+                    currently_playing_pid: Arc::new(Mutex::new(None)),
                 })
             })
         });
@@ -216,18 +216,14 @@ async fn stop(ctx: Context<'_>) -> Result<()> {
     };
 
     {
-        let mut pid = ctx.data().currently_playing_pid.read().unwrap();
-        if let Some(pid) = pid.as_ref().take() {
-            let pid = Pid::from_raw(pid as i32);
-            tracing::debug!(?pid, "asking player to stop");
-            let _ = nix::sys::signal::kill(pid, Signal::SIGUSR1);
-
-            // wait for it to exit, or timeout
-            tokio::select! {
-                _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {},
-                _ = nix::sys::wait::waitpid(pid, None) => {},
+        let pid = {
+            let mut pid_mu = ctx.data().currently_playing_pid.lock().unwrap();
+            pid_mu.take()
+        };
+        if let Some(pid) = pid {
+            if let Err(e) = kill_player(pid as _).await.context("killing player") {
+                tracing::error!(?e, "failed to kill player");
             }
-
         }
     }
 
@@ -246,4 +242,94 @@ async fn stop(ctx: Context<'_>) -> Result<()> {
 #[poise::command(slash_command)]
 async fn restart(_ctx: Context<'_>) -> Result<()> {
     std::process::exit(0);
+}
+
+#[derive(Debug, Clone, Copy)]
+enum HowKilled {
+    Usr1,
+    Term,
+    Kill,
+}
+/// gracefully kill player by sending it SIGUSR1, waiting, then sending it SIGTERM
+async fn kill_player(pid: u32) -> Result<HowKilled> {
+    use nix::{sys::signal::Signal, unistd::Pid};
+
+    let pid = Pid::from_raw(pid as i32);
+    tracing::debug!(?pid, "asking player to stop");
+    nix::sys::signal::kill(pid, Signal::SIGUSR1).context("sending usr1")?;
+
+    // wait for it to exit, or timeout
+    tokio::select! {
+        _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {},
+        _ = async { tokio::task::spawn_blocking(move || nix::sys::wait::waitpid(pid, None).map_err(|e| anyhow!("error waiting: {:?}", e))).await? } => {
+            return Ok(HowKilled::Usr1);
+        },
+    }
+
+    tracing::warn!("player did not exit in time after USR1; sending TERM");
+    nix::sys::signal::kill(pid, Signal::SIGTERM)?;
+
+    tokio::select! {
+        _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {},
+        _ = async { tokio::task::spawn_blocking(move || nix::sys::wait::waitpid(pid, None).map_err(|e| anyhow!("error waiting: {:?}", e))).await? } => {
+            return Ok(HowKilled::Term);
+        },
+    }
+
+    tracing::warn!("player did not exit in time after TERM; sending KILL");
+    nix::sys::signal::kill(pid, Signal::SIGKILL)?;
+
+    Ok::<_, anyhow::Error>(HowKilled::Kill)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tokio::io::AsyncBufReadExt;
+
+    #[tokio::test]
+    async fn kill_player_works() -> Result<()> {
+        common::util::setup_logging()?;
+
+        let sh = r#"
+trap 'echo usr1' SIGUSR1;
+trap 'echo term' SIGTERM;
+echo setup
+while true; do sleep 0.5; done;
+"#;
+        let mut child = tokio::process::Command::new("bash")
+            .args(&["-c", sh])
+            .stdout(Stdio::piped())
+            .spawn()?;
+        let pid = child.id().unwrap();
+        let out = child.stdout.take().unwrap();
+
+        let (setup_tx, setup_rx) = tokio::sync::oneshot::channel();
+
+        let output = tokio::task::spawn(async move {
+            let mut setup_tx = Some(setup_tx);
+            let mut out_str = String::new();
+            let mut reader = tokio::io::BufReader::new(out).lines();
+            while let Some(line) = reader.next_line().await.unwrap() {
+                if line.trim() == "setup" {
+                    setup_tx.take().unwrap().send(()).unwrap();
+                }
+                tracing::debug!("{}", line);
+                out_str.push_str(&format!("{}\n", line));
+            }
+            out_str
+        });
+
+        // wait for child's handlers to be setup
+        setup_rx.await.unwrap();
+
+        tracing::debug!(?pid, "started player");
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        kill_player(pid).await?;
+
+        let out_str = output.await?;
+        assert_eq!(out_str, "setup\nusr1\nterm\n");
+
+        Ok(())
+    }
 }

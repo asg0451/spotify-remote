@@ -84,11 +84,8 @@ pub async fn main() -> Result<()> {
         _ = &mut spirc_task => {
             tracing::debug!("spirc task finished");
         }
-        _ = util::ctrl_c_and_pipe() => {
-            // what happens is songbird sends SIGKILL(9) to the last child -- gstreamer. presumably then its stdin is closed, which means our stdout is closed -> SIGPIPE
-            // actually what happens is the Player fails to write to stoud and then calls std::process::exit(1) :(
-            // TODO: what can we do about that
-            tracing::debug!("received ctrl-c or pipe");
+        _ = util::ctrl_c() => {
+            tracing::debug!("received ctrl-c");
         },
         _ = util::usr1() => {
             tracing::debug!("got SIGUSR1, shutting down")

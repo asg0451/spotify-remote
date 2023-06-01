@@ -482,6 +482,7 @@ dependencies = [
  "anyhow",
  "atty",
  "console-subscriber",
+ "nix 0.26.2",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -1660,15 +1661,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "memoffset"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
-dependencies = [
- "autocfg",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1739,7 +1731,7 @@ dependencies = [
  "cc",
  "cfg-if",
  "libc",
- "memoffset 0.6.5",
+ "memoffset",
 ]
 
 [[package]]
@@ -1751,8 +1743,6 @@ dependencies = [
  "bitflags",
  "cfg-if",
  "libc",
- "memoffset 0.7.1",
- "pin-utils",
  "static_assertions",
 ]
 

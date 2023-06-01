@@ -80,14 +80,12 @@ pub async fn ctrl_c() {
     };
 }
 
-
 #[cfg(unix)]
 pub async fn usr1() {
     use tokio::signal::unix::{signal, SignalKind};
     let mut usr1 = signal(SignalKind::user_defined1()).unwrap();
-    let _ = usr1.recv().await
+    let _ = usr1.recv().await;
 }
-
 
 #[cfg(test)]
 mod tests {
