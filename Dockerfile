@@ -1,5 +1,5 @@
 FROM debian:bullseye-slim AS runtime
-RUN apt update && apt install -y ca-certificates # touch
+RUN apt-get update && apt-get install -y ca-certificates # touch
 RUN update-ca-certificates
 RUN apt-get install -y libtool gstreamer1.0-tools libopus-dev ffmpeg python3 python-is-python3 gstreamer1.0-plugins-base
 RUN apt-get install -y ffmpeg curl dnsutils
@@ -10,7 +10,7 @@ RUN mkdir /build
 WORKDIR /build
 
 RUN apt-get update && apt-get install -y build-essential cmake
-RUN apt-get install -y libtool gstreamer1.0-tools libopus-dev ffmpeg python3 python-is-python3 gstreamer1.0-plugins-base protobuf-compiler
+RUN apt-get install -y libtool libopus-dev
 
 RUN rustup update
 
