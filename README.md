@@ -19,5 +19,5 @@ This is a self-hosted Discord bot that allows you to stream to it as if it was a
 
     - TODO: make the remote address not default to coldcutz.net for public builds
 1. Open Spotify and connect to the virtual device (the default name is `danube`)
-1. `forwarder` Will connect to the server and output a connect code. In Discord, run `/play_spotify <code>` to finish the connection.
+1. `forwarder` will connect to the server and output a connect code. In Discord, run `/play_spotify <code>` to finish the connection.
 1. You should now be able to play music through the bot, using Spotify normally.
