@@ -62,52 +62,51 @@ jobs:
           files: target/x86_64-apple-darwin/release/forwarder-macos-x86
   # TODO: mac arm - aarch64-apple-darwin
 
-  # DBG: TODO: reenable
-  # build-receiver-image:
-  #   runs-on: ubuntu-latest
-  #   # Permissions to use OIDC token authentication - depot
-  #   permissions:
-  #     contents: read
-  #     id-token: write
-  #     # Allows pushing to the GitHub Container Registry
-  #     packages: write
+  build-receiver-image:
+    runs-on: ubuntu-latest
+    # Permissions to use OIDC token authentication - depot
+    permissions:
+      contents: read
+      id-token: write
+      # Allows pushing to the GitHub Container Registry
+      packages: write
 
-  #   steps:
-  #     - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-  #     # log in to ecr
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: us-east-1
-  #     - name: log in to ecr
-  #       uses: aws-actions/amazon-ecr-login@v1
-  #       with:
-  #         registry: 413471642455.dkr.ecr.us-east-1.amazonaws.com
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # log in to ecr
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: log in to ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry: 413471642455.dkr.ecr.us-east-1.amazonaws.com
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-  #     - name: Docker meta
-  #       id: meta
-  #       uses: docker/metadata-action@v4
-  #       with:
-  #         images: |
-  #           413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver
-  #         tags: |
-  #           type=ref,event=branch
-  #           type=ref,event=pr
-  #           type=semver,pattern={{version}}
-  #           type=semver,pattern={{major}}.{{minor}}
-  #           type=sha
-  #           # set latest tag for default branch
-  #           type=raw,value=latest,enable={{is_default_branch}}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
 
-  #     - uses: depot/setup-action@v1
-  #     - uses: depot/build-push-action@v1
-  #       with:
-  #         context: .
-  #         push: ${{ github.event_name != 'pull_request' }}
-  #         tags: ${{ steps.meta.outputs.tags }}
-  #         platforms: linux/amd64,linux/arm64
+      - uses: depot/setup-action@v1
+      - uses: depot/build-push-action@v1
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64,linux/arm64
