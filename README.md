@@ -21,3 +21,7 @@ This is a self-hosted Discord bot that allows users to stream to it as if it was
 1. Open Spotify and connect to the virtual device (the default name is `danube`)
 1. `forwarder` will connect to the server and output a connect code. In Discord, run `/play_spotify <code>` to finish the connection.
 1. You should now be able to play music through the bot, using Spotify normally.
+
+## Compiling yourself
+
+This is a Rust project, so once you're set up with Rust and Cargo, `cargo build --release` should suffice. See the `Dockerfile` for build and runtime dependencies for the `receiver` (or just use the provided docker image).
