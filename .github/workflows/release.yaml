@@ -72,7 +72,7 @@ jobs:
       packages: write
 
     env:
-      IMAGE_NAME: ${{ github.repository }}
+      IMAGE_NAME: ${{ github.repository }}-receiver
 
     steps:
       - uses: actions/checkout@v3
