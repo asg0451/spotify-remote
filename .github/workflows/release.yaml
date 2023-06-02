@@ -55,7 +55,7 @@ jobs:
           key: "release-forwarder-bin-linux"
       - name: Build forwarder release
         run: cross build --release --target x86_64-pc-windows-gnu --bin forwarder
-      - run: mv target/x86_64-pc-windows-gnu/release/forwarder target/x86_64-pc-windows-gnu/release/forwarder-windows.exe
+      - run: mv target/x86_64-pc-windows-gnu/release/forwarder.exe target/x86_64-pc-windows-gnu/release/forwarder-windows.exe
       - name: upload file
         uses: softprops/action-gh-release@v1
         with:
