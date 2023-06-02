@@ -7,7 +7,7 @@ This is a self-hosted Discord bot that allows users to stream to it as if it was
 ## Getting started
 
 1. Create a Discord app and bot.
-1. Run the `receiver` Docker image either locally or on a server, such as via: `$ docker run -p8080:8080 -e DISCORD_TOKEN=<your-token> TODO_image_name`, or via docker-compose, k8s, etc. It is intended to run as a persistent service. The image supports x86_64 and arm64 architectures.
+1. Run the `receiver` [Docker image](https://github.com/asg0451/spotify-remote/pkgs/container/spotify-remote-receiver) either locally or on a server, such as via: `$ docker run -p8080:8080 -e DISCORD_TOKEN=<your-token> TODO_image_name`, or via docker-compose, k8s, etc. It is intended to run as a persistent service. The image supports x86_64 and arm64 architectures.
 
     - NOTE: if you end up exposing this service over the internet, it's strongly recommended to use https!
 1. Invite the bot to your server. Make sure it has sufficient permissions to join voice channels, speak, send messages, do slash commands, and read message contents.
