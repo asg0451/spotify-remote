@@ -22,6 +22,10 @@ This is a self-hosted Discord bot that allows users to stream to it as if it was
 1. `forwarder` will connect to the server and output a connect code. In Discord, run `/play_spotify <code>` to finish the connection.
 1. You should now be able to play music through the bot, using Spotify normally.
 
+## How it works
+
+The `forwarder` binary emulates a Spotify Connect device by advertising itself over mDNS. When you have Spotify connect to it, it's provided with an access token to use to play music. It then sends an HTTP(S) request to the `receiver`, which is both an HTTP server and a Discord bot, containing the token. The `receiver` stores that token in its memory, and when you request playback for the id that the `forwarder` provided and associated with the request, the `receiver` joins your server and starts playback. When you stop playback, the `receiver` leaves the voice channel and discards the token.
+
 ## Compiling yourself
 
 This is a Rust project, so once you're set up with Rust and Cargo, `cargo build --release` should suffice. See the `Dockerfile` for build and runtime dependencies for the `receiver` (or just use the provided docker image).

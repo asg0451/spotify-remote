@@ -33,4 +33,6 @@ WORKDIR /app
 COPY --from=builder /build/bin/receiver /usr/local/bin/
 COPY --from=builder /build/bin/player /usr/local/bin/
 
+EXPOSE 8080
+
 ENTRYPOINT [ "/usr/local/bin/receiver" ]

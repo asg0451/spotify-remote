@@ -111,15 +111,15 @@ fn device_id(name: &str) -> String {
 }
 
 fn generate_id() -> String {
+    use once_cell::sync::Lazy;
     use rand::seq::SliceRandom;
 
-    // TODO: less stupid
-    let base_words = vec![
-        "bhrist", "blarf", "brad", "balph", "beer", "bilf", "breek", "buch",
-    ];
+    static BASE_WORDS: Lazy<Vec<&'static str>> =
+        Lazy::new(|| vec!["brad", "bro", "beer", "buck", "beans", "bird", "brain"]);
+
     let mut rng = rand::thread_rng();
 
-    let word = base_words.choose(&mut rng).unwrap();
+    let word = BASE_WORDS.choose(&mut rng).unwrap();
 
     let num = rand::random::<u32>() % 100;
 
