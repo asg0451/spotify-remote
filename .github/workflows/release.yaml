@@ -12,7 +12,23 @@ permissions:
   contents: write # for release
 
 jobs:
-  build-forwarder-binaries:
+  build-forwarder-binaries-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: "release-forwarder-bin-linux"
+      - name: Build forwarder release
+        run: cargo build --release --bin forwarder
+      - run: mv target/release/forwarder target/release/forwarder-linux
+      - name: upload file
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/release/forwarder-linux
+
+  build-forwarder-binaries-windows-cross:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,105 +36,78 @@ jobs:
       - run: cargo install cross
       - uses: Swatinem/rust-cache@v2
         with:
-          key: "release-forwarder-bin"
-      - name: Build windows forwarder release
+          key: "release-forwarder-bin-linux"
+      - name: Build forwarder release
         run: cross build --release --target x86_64-pc-windows-gnu --bin forwarder
-      - name: Build linux forwarder release # TODO: can we do this in parallel by creating the release first? https://dev.to/eugenebabichenko/automated-multi-platform-releases-with-github-actions-1abg
-        run: cargo build --release --bin forwarder
-      # TODO: macos forwarder.app?
-      - name: Release
+      - run: mv target/x86_64-pc-windows-gnu/release/forwarder.exe target/x86_64-pc-windows-gnu/release/forwarder-windows.exe
+      - name: upload file
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            target/x86_64-pc-windows-gnu/release/forwarder.exe
-            target/release/forwarder
+          files: target/x86_64-pc-windows-gnu/release/forwarder-windows.exe
 
-  build-receiver-image:
-    runs-on: ubuntu-latest
-    # Permissions to use OIDC token authentication - depot
-    permissions:
-      contents: read
-      id-token: write
-      # Allows pushing to the GitHub Container Registry
-      packages: write
-
+  build-forwarder-binaries-mac-x86:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
-
-      # log in to ecr
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - run: rustup toolchain install stable --profile minimal --target x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-      - name: log in to ecr
-        uses: aws-actions/amazon-ecr-login@v1
+          key: "release-forwarder-bin-macos"
+      - name: Build forwarder release
+        run: cargo build --release --target x86_64-apple-darwin --bin forwarder
+      - run: mv target/x86_64-apple-darwin/release/forwarder target/x86_64-apple-darwin/release/forwarder-macos-x86
+      - name: Upload file
+        uses: softprops/action-gh-release@v1
         with:
-          registry: 413471642455.dkr.ecr.us-east-1.amazonaws.com
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          files: target/x86_64-apple-darwin/release/forwarder-macos-x86
+  # TODO: mac arm - aarch64-apple-darwin
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: |
-            413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha
-            # set latest tag for default branch
-            type=raw,value=latest,enable={{is_default_branch}}
+  # DBG: TODO: reenable
+  # build-receiver-image:
+  #   runs-on: ubuntu-latest
+  #   # Permissions to use OIDC token authentication - depot
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #     # Allows pushing to the GitHub Container Registry
+  #     packages: write
 
-      - uses: depot/setup-action@v1
-      - uses: depot/build-push-action@v1
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          platforms: linux/amd64,linux/arm64
-          # lint: true
-          # lint-fail-on: warning
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v2
+  #     # log in to ecr
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: us-east-1
+  #     - name: log in to ecr
+  #       uses: aws-actions/amazon-ecr-login@v1
+  #       with:
+  #         registry: 413471642455.dkr.ecr.us-east-1.amazonaws.com
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # - name: Cache Docker layers
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: /tmp/.buildx-cache
-      #     key: ${{ runner.os }}-buildx-${{ github.sha }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-buildx-
+  #     - name: Docker meta
+  #       id: meta
+  #       uses: docker/metadata-action@v4
+  #       with:
+  #         images: |
+  #           413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver
+  #         tags: |
+  #           type=ref,event=branch
+  #           type=ref,event=pr
+  #           type=semver,pattern={{version}}
+  #           type=semver,pattern={{major}}.{{minor}}
+  #           type=sha
+  #           # set latest tag for default branch
+  #           type=raw,value=latest,enable={{is_default_branch}}
 
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v1
-
-      # - name: touch cache
-      #   run: mkdir -p /tmp/.buildx-cache{,-new}
-
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     context: .
-      #     platforms: linux/amd64,linux/arm64
-      #     push: ${{ github.event_name != 'pull_request' }}
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
-      #     cache-from: type=local,src=/tmp/.buildx-cache
-      #     cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-      # # This ugly bit is necessary if you don't want your cache to grow forever
-      # # until it hits GitHub's limit of 5GB.
-      # # Temp fix
-      # # https://github.com/docker/build-push-action/issues/252
-      # # https://github.com/moby/buildkit/issues/1896
-      # - name: Move cache
-      #   run: |
-      #     rm -rf /tmp/.buildx-cache
-      #     mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+  #     - uses: depot/setup-action@v1
+  #     - uses: depot/build-push-action@v1
+  #       with:
+  #         context: .
+  #         push: ${{ github.event_name != 'pull_request' }}
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         platforms: linux/amd64,linux/arm64
