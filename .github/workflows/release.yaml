@@ -12,21 +12,7 @@ permissions:
   contents: write # for release
 
 jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: ${{ github.ref_name }}
-          draft: true # TODO: false
-          prerelease: false
-          generate_release_notes: false
-
   build-forwarder-binaries-linux:
-    needs: create-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -40,11 +26,9 @@ jobs:
       - name: upload file
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.create_release.outputs.tag-name }}
           files: target/release/forwarder-linux
 
   build-forwarder-binaries-windows-cross:
-    needs: create-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -59,11 +43,9 @@ jobs:
       - name: upload file
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.create_release.outputs.tag-name }}
           files: target/x86_64-pc-windows-gnu/release/forwarder-windows.exe
 
   build-forwarder-binaries-mac-x86:
-    needs: create-release
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -74,10 +56,9 @@ jobs:
       - name: Build forwarder release
         run: cargo build --release --target x86_64-apple-darwin --bin forwarder
       - run: mv target/x86_64-apple-darwin/release/forwarder target/x86_64-apple-darwin/release/forwarder-macos-x86
-      - name: Upload files
+      - name: Upload file
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.create_release.outputs.tag-name }}
           files: target/x86_64-apple-darwin/release/forwarder-macos-x86
   # TODO: mac arm - aarch64-apple-darwin
 
