@@ -7,7 +7,7 @@ This is a self-hosted Discord bot that allows users to stream to it as if it was
 ## Getting started
 
 1. Create a Discord app and bot.
-1. Run the `receiver` Docker image either locally or on a server, such as via: `$ docker run -p8080:8080 -e DISCORD_TOKEN=<your-token> TODO_image_name`, or via docker-compose, k8s, etc. It is intended to run as a persistent service.
+1. Run the `receiver` Docker image either locally or on a server, such as via: `$ docker run -p8080:8080 -e DISCORD_TOKEN=<your-token> TODO_image_name`, or via docker-compose, k8s, etc. It is intended to run as a persistent service. The image supports x86_64 and arm64 architectures.
 
     - NOTE: if you end up exposing this service over the internet, it's strongly recommended to use https!
 1. Invite the bot to your server. Make sure it has sufficient permissions to join voice channels, speak, send messages, do slash commands, and read message contents.
@@ -15,7 +15,7 @@ This is a self-hosted Discord bot that allows users to stream to it as if it was
     - TODO: nail down which these are specifically
 1. Run the `forwarder` binary from your local machine, and point it at the server you started, such as with `$ ./forwarder -a http://localhost:8080`
 
-    - The `forwarder` binary is available in the [latest github release](https://github.com/asg0451/spotify-remote/releases/latest). Currently binaries are built for Linux and Windows.
+    - The `forwarder` binary is available in the [latest github release](https://github.com/asg0451/spotify-remote/releases/latest). Currently binaries are built for Linux, Mac, and Windows (x86_64; if you want to run it on arm64, such as Mac M1/2, you'll need to compile it yourself for now).
 1. Open Spotify and connect to the virtual device (the default name is `danube`)
 1. `forwarder` will connect to the server and output a connect code. In Discord, run `/play_spotify <code>` to finish the connection.
 1. You should now be able to play music through the bot, using Spotify normally.
