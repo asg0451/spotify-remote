@@ -17,11 +17,6 @@ docker: $(srcs) Dockerfile
 docker-run: docker
 	docker run -it --rm -e RUST_BACKTRACE=full -e RUST_LOG=spotify-remote-receiver=trace,info --env-file receiver/.env 413471642455.dkr.ecr.us-east-1.amazonaws.com/spotify-remote-receiver:latest
 
-refresh-ecr:
-	ssh hex2 bash --login -c "~/kube/k3s/apps/ecr.sh"
-restart:
-	ssh hex2 "~/bin/kubectl -n apps rollout restart deployment/sproter"
-
 deploy: docker-push
 	$(MAKE) refresh-ecr
 	$(MAKE) restart
@@ -48,11 +43,6 @@ docker-arm-builder-up:
 	aws ec2 wait instance-running --instance-ids i-00ab99709da8e22aa
 docker-arm-builder-down:
 	aws ec2 stop-instances --instance-ids i-00ab99709da8e22aa
-
-stop:
-	ssh hex2 'PATH=$$PATH:~/bin kubectl -n apps scale --replicas 0 deployment/sproter'
-start:
-	ssh hex2 'export PATH=$$PATH:~/bin && ./kube/k3s/apps/ecr.sh && kubectl -n apps scale --replicas 1 deployment/sproter'
 
 # setup only
 docker-create-builder:
