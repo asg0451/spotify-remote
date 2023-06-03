@@ -8,7 +8,12 @@ use receiver::{bot::BotOptions, creds_registry::CredsRegistry};
 
 #[derive(Debug, Parser)]
 struct Options {
-    #[clap(short, long, default_value = "8080")]
+    #[clap(
+        short,
+        long,
+        default_value = "8080",
+        help = "port for the http server to listen on"
+    )]
     port: u16,
     #[clap(flatten)]
     bot_opts: BotOptions,

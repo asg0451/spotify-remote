@@ -5,13 +5,13 @@ use reqwest::StatusCode;
 use sha1::{Digest, Sha1};
 
 #[derive(Debug)]
-pub struct Transmitter {
+pub struct Forwarder {
     receiver_addr: String,
     http_client: reqwest::Client,
     device_name: String,
 }
 
-impl Transmitter {
+impl Forwarder {
     pub async fn new(receiver_addr: String, device_name: String) -> Result<Self> {
         let http_client = reqwest::ClientBuilder::new()
             .connect_timeout(std::time::Duration::from_secs(5))

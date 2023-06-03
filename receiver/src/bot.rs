@@ -14,7 +14,13 @@ use crate::creds_registry::CredsRegistry;
 
 #[derive(Debug, Parser, Clone)]
 pub struct BotOptions {
-    #[clap(short, long, default_value = "player")]
+    #[clap(
+        short,
+        long,
+        env,
+        default_value = "player",
+        help = "path to the player binary"
+    )]
     player_path: String,
     #[clap(short, long, env = "DISCORD_TOKEN")]
     discord_token: String,

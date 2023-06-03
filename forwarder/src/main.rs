@@ -3,9 +3,20 @@ use clap::Parser;
 
 #[derive(Debug, Parser)]
 struct Options {
-    #[clap(short = 'a', long)]
+    #[clap(
+        short = 'a',
+        long,
+        env,
+        help = "address of the receiver server, eg http://localhost:8080"
+    )]
     receiver_addr: String,
-    #[clap(short = 'n', long, default_value = "danube")]
+    #[clap(
+        short = 'n',
+        long,
+        default_value = "danube",
+        env,
+        help = "name of the device"
+    )]
     device_name: String,
 }
 
@@ -15,8 +26,7 @@ async fn main() -> Result<()> {
 
     let opts = Options::parse();
 
-    let forwarder =
-        forwarder::server::Transmitter::new(opts.receiver_addr, opts.device_name).await?;
+    let forwarder = forwarder::Forwarder::new(opts.receiver_addr, opts.device_name).await?;
 
     forwarder.run().await?;
 
