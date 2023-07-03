@@ -17,7 +17,7 @@ reqwest = { version = "0.11.18", default_features = false, features = [
 ] }
 serde_json = "1.0.96"
 sha1 = "0.10.5"
-tokio = { version = "1.28.2", features = ["full"] }
+tokio = { version = "1.29.1", features = ["full"] }
 tracing = "0.1.37"
 rand = "0.8.5"
 
