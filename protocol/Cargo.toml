@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 librespot-core = "0.4.2"
-serde = { version = "1.0.163", features = ["derive"] }
+serde = { version = "1.0.165", features = ["derive"] }
