@@ -15,7 +15,7 @@ jobs:
   build-forwarder-binaries-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal
       - uses: Swatinem/rust-cache@v2
         with:
@@ -31,7 +31,7 @@ jobs:
   build-forwarder-binaries-windows-cross:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal
       - run: cargo install cross
       - uses: Swatinem/rust-cache@v2
@@ -48,7 +48,7 @@ jobs:
   build-forwarder-binaries-mac-x86:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal --target x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
         with:
@@ -75,7 +75,7 @@ jobs:
       IMAGE_NAME: ${{ github.repository }}-receiver
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Docker meta
         id: meta
