@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = { version = "1.0.71", features = ["backtrace"] }
-clap = { version = "4.3.0", features = ["derive", "env"] }
+clap = { version = "4.4.4", features = ["derive", "env"] }
 hex = "0.4.3"
 librespot = { version = "0.4.2", default-features = false }
 sha1 = "0.10.5"
