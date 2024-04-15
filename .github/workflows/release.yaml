@@ -36,7 +36,7 @@ jobs:
       - run: cargo install cross
       - uses: Swatinem/rust-cache@v2
         with:
-          key: "release-forwarder-bin-linux"
+          key: "release-forwarder-bin-linux-windows-cross"
       - name: Build forwarder release
         run: cross build --release --target x86_64-pc-windows-gnu --bin forwarder
       - run: mv target/x86_64-pc-windows-gnu/release/forwarder.exe target/x86_64-pc-windows-gnu/release/forwarder-windows.exe
@@ -52,7 +52,7 @@ jobs:
       - run: rustup toolchain install stable --profile minimal --target x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
         with:
-          key: "release-forwarder-bin-macos"
+          key: "release-forwarder-bin-macos-x86"
       - name: Build forwarder release
         run: cargo build --release --target x86_64-apple-darwin --bin forwarder
       - run: mv target/x86_64-apple-darwin/release/forwarder target/x86_64-apple-darwin/release/forwarder-macos-x86
@@ -68,7 +68,7 @@ jobs:
       - run: rustup toolchain install stable --profile minimal --target aarch64-apple-darwin
       - uses: Swatinem/rust-cache@v2
         with:
-          key: "release-forwarder-bin-macos"
+          key: "release-forwarder-bin-macos-arm"
       - name: Build forwarder release
         run: cargo build --release --target aarch64-apple-darwin --bin forwarder
       - run: mv target/aarch64-apple-darwin/release/forwarder target/aarch64-apple-darwin/release/forwarder-macos-arm
