@@ -65,7 +65,6 @@ pub async fn main() -> Result<()> {
     let connect_config = connect_config.clone();
 
     let soft_volume = mixer.get_soft_volume();
-    let format = format;
 
     let backend = librespot::playback::audio_backend::find(None).unwrap();
 
