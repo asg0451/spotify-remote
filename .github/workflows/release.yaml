@@ -36,7 +36,7 @@ jobs:
       - run: cargo install cross
       - uses: Swatinem/rust-cache@v2
         with:
-          key: "release-forwarder-bin-linux"
+          key: "release-forwarder-bin-linux-windows-cross"
       - name: Build forwarder release
         run: cross build --release --target x86_64-pc-windows-gnu --bin forwarder
       - run: mv target/x86_64-pc-windows-gnu/release/forwarder.exe target/x86_64-pc-windows-gnu/release/forwarder-windows.exe
@@ -52,7 +52,7 @@ jobs:
       - run: rustup toolchain install stable --profile minimal --target x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
         with:
-          key: "release-forwarder-bin-macos"
+          key: "release-forwarder-bin-macos-x86"
       - name: Build forwarder release
         run: cargo build --release --target x86_64-apple-darwin --bin forwarder
       - run: mv target/x86_64-apple-darwin/release/forwarder target/x86_64-apple-darwin/release/forwarder-macos-x86
@@ -60,7 +60,22 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: target/x86_64-apple-darwin/release/forwarder-macos-x86
-  # TODO: mac arm - aarch64-apple-darwin
+
+  build-forwarder-binaries-mac-arm:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: rustup toolchain install stable --profile minimal --target aarch64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: "release-forwarder-bin-macos-arm"
+      - name: Build forwarder release
+        run: cargo build --release --target aarch64-apple-darwin --bin forwarder
+      - run: mv target/aarch64-apple-darwin/release/forwarder target/aarch64-apple-darwin/release/forwarder-macos-arm
+      - name: Upload file
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/aarch64-apple-darwin/release/forwarder-macos-arm
 
   build-receiver-image:
     runs-on: ubuntu-latest
@@ -101,10 +116,6 @@ jobs:
           aws-region: us-east-1
       - name: log in to ecr
         uses: aws-actions/amazon-ecr-login@v1
-        with:
-          registry: 413471642455.dkr.ecr.us-east-1.amazonaws.com
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       # also do github packages
       - name: Log in to the Github Packages Container registry
