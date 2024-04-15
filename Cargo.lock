@@ -707,6 +707,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dns-sd"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d748509dea20228f63ba519bf142ce2593396386125b01f5b0d6412dab972087"
+dependencies = [
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1490,6 +1500,7 @@ checksum = "2aa877d18f6150364012cb4be5682d62d7c712c88bae2d0d01720fd7c15e2f06"
 dependencies = [
  "aes-ctr",
  "base64 0.13.1",
+ "dns-sd",
  "form_urlencoded",
  "futures-core",
  "hmac",

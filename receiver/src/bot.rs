@@ -15,7 +15,6 @@ use crate::creds_registry::CredsRegistry;
 #[derive(Debug, Parser, Clone)]
 pub struct BotOptions {
     #[clap(
-        short,
         long,
         env,
         default_value = "player",
